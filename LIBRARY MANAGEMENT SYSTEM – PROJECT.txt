@@ -1,0 +1,183 @@
+LIBRARY MANAGEMENT SYSTEM – PROJECT SETUP GUIDE
+==============================================
+
+This document explains how to set up and run the Library Management System
+(Spring Boot Backend + Vite Frontend).
+
+--------------------------------------------------
+PREREQUISITES
+--------------------------------------------------
+
+Backend:
+- JDK 17
+- IntelliJ IDEA (recommended)
+- Lombok plugin enabled in IntelliJ
+- MySQL Server (8.x recommended)
+
+Frontend:
+- Node.js (v18+ recommended)
+- npm (comes with Node.js)
+- VS Code (recommended editor)
+
+--------------------------------------------------
+BACKEND SETUP (SPRING BOOT)
+--------------------------------------------------
+
+1. Download zip file
+
+   Backend-springboot (open in IntelliJ idea)
+
+2. Open the project in IntelliJ IDEA
+
+3. Enable Lombok
+   - Go to: File → Settings → Plugins
+   - Install "Lombok"
+   - Restart IntelliJ
+   - Go to: Settings → Build, Execution, Deployment → Compiler → Annotation Processors
+   - Enable "Annotation processing"
+
+4. Configure MySQL Database
+   - Create a database:
+     CREATE DATABASE library_management;
+
+5. Update application.properties (or application.yml)
+
+   spring.application.name=Library-Management-System
+   server.port=5000
+
+   spring.datasource.url=jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:library_management}
+   spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+   spring.datasource.username=${DB_USERNAME:root}
+   spring.datasource.password=${DB_PASSWORD:your_mysql_password}
+
+   spring.jpa.hibernate.ddl-auto=update
+   spring.jpa.show-sql=true
+
+--------------------------------------------------
+PAYMENT GATEWAY CONFIGURATION
+--------------------------------------------------
+
+Razorpay:
+   razorpay.key.id=your_razorpay_api_key
+   razorpay.key.secret=your_razorpay_secret
+   razorpay.callback.base-url=http://localhost:5173
+
+Stripe:
+   stripe.api.key=your_stripe_api_key
+
+--------------------------------------------------
+EMAIL CONFIGURATION (GMAIL SMTP)
+--------------------------------------------------
+
+1. Enable 2-Step Verification in Gmail
+2. Generate App Password
+
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your_gmail
+spring.mail.password=your_app_password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+library.notification.from=your_email
+library.notification.enabled=true
+library.notification.due-reminder-days=3
+
+--------------------------------------------------
+AI CONFIGURATION
+--------------------------------------------------
+
+Gemini API:
+   gemini.api.key=your_gemini_api_key
+
+--------------------------------------------------
+SUBSCRIPTION & SCHEDULER
+--------------------------------------------------
+
+subscription.default.plan=MONTHLY
+subscription.auto.renew.enabled=false
+subscription.expiry.check.cron=0 0 2 * * ?
+
+spring.task.scheduling.pool.size=5
+
+--------------------------------------------------
+OAUTH2 GOOGLE LOGIN
+--------------------------------------------------
+
+spring.security.oauth2.client.registration.google.client-id=your_google_client_id
+spring.security.oauth2.client.registration.google.client-secret=your_google_client_secret
+spring.security.oauth2.client.registration.google.scope=profile,email
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:5000/login/oauth2/code/google
+
+--------------------------------------------------
+RUN BACKEND
+--------------------------------------------------
+
+Option 1: IntelliJ
+- Run the main Spring Boot application
+
+Option 2: Terminal
+- ./mvnw spring-boot:run
+
+Backend will run on:
+http://localhost:5000
+
+--------------------------------------------------
+FRONTEND SETUP (VITE + REACT)
+--------------------------------------------------
+
+1. Open frontend folder in vs code
+   
+
+2. Install dependencies
+   npm install
+
+3. Start development server
+   npm run dev
+
+Frontend will run on:
+http://localhost:5173
+
+--------------------------------------------------
+FRONTEND REQUIREMENTS
+--------------------------------------------------
+
+- Node.js installed (check with: node -v)
+- npm installed (check with: npm -v)
+- VS Code recommended
+- Optional VS Code extensions:
+  - ES7+ React Snippets
+  - Prettier
+  - ESLint
+
+--------------------------------------------------
+ENVIRONMENT VARIABLES (OPTIONAL)
+--------------------------------------------------
+
+You can use a .env file for frontend:
+
+VITE_API_BASE_URL=http://localhost:5000
+
+--------------------------------------------------
+COMMON ISSUES
+--------------------------------------------------
+
+1. Lombok errors:
+   - Ensure Lombok plugin is installed
+   - Annotation processing enabled
+
+2. Database connection error:
+   - Check MySQL is running
+   - Verify username/password
+   - Verify database name
+
+3. CORS issues:
+   - Ensure frontend URL is http://localhost:5173
+   - Backend runs on port 5000
+
+--------------------------------------------------
+SETUP COMPLETE 🎉
+--------------------------------------------------
+
+Backend: http://localhost:5000
+Frontend: http://localhost:5173
