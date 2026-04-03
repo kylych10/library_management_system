@@ -1,7 +1,5 @@
-LIBRARY MANAGEMENT SYSTEM – PROJECT SETUP GUIDE
+LIBRARY MANAGEMENT SYSTEM 
 ==============================================
-
-This document explains how to set up and run the Library Management System
 (Spring Boot Backend + Vite Frontend).
 
 --------------------------------------------------
@@ -174,10 +172,6 @@ COMMON ISSUES
 3. CORS issues:
    - Ensure frontend URL is http://localhost:5173
    - Backend runs on port 5000
-
---------------------------------------------------
-SETUP COMPLETE 🎉
---------------------------------------------------
 
 Backend: http://localhost:5000
 Frontend: http://localhost:5173
