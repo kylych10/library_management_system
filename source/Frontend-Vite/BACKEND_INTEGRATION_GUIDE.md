@@ -1,8 +1,5 @@
 # Backend Integration Guide for Admin Dashboard
 
-## Overview
-This guide provides the exact steps needed to integrate the 2 admin pages that currently use mock data with the backend.
-
 ---
 
 ## 🔴 Pages Requiring Backend Integration
