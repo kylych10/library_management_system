@@ -1,4 +1,4 @@
-# 🏗️ Zosh Library - Frontend Architecture
+# 🏗️ Library - Frontend Architecture
 
 ## 📐 System Architecture
 
@@ -452,5 +452,3 @@ text-5xl   : 48px
    - Error tracking
 
 ---
-
-Built with ❤️ for Zosh Library
