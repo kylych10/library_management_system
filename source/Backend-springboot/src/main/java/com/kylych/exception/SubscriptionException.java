@@ -1,0 +1,15 @@
+package com.kylych.exception;
+
+/**
+ * Custom exception for subscription-related operations
+ */
+public class SubscriptionException extends Exception {
+
+    public SubscriptionException(String message) {
+        super(message);
+    }
+
+    public SubscriptionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
