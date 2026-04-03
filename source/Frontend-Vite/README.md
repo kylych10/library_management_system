@@ -1,4 +1,4 @@
-# Zosh Library - Library Management System
+Library Management System
 
 A modern, full-featured library management system built with React, Redux Toolkit, and Tailwind CSS. This application provides a comprehensive solution for managing library operations including book cataloging, member subscriptions, book loans, and payment processing.
 
@@ -270,37 +270,3 @@ VITE_API_BASE_URL=http://localhost:5000
 - Focus visible states
 - Alt text for images
 
-## Documentation
-
-For more detailed information, see:
-
-- [Quick Start Guide](docs/QUICK_START.md)
-- [Landing Page Setup](docs/LANDING_PAGE_SETUP.md)
-- [Architecture Documentation](docs/ARCHITECTURE.md)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support, email contact@zoshlibrary.com or create an issue in the repository.
-
-## Acknowledgments
-
-- Material-UI for the comprehensive icon library
-- Tailwind CSS for the utility-first CSS framework
-- Redux Toolkit for simplified state management
-- Vite for the blazing-fast build tool
-
----
-
-Made with ❤ by Zosh Team
