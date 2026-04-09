@@ -47,8 +47,8 @@ const Footer = () => {
   ];
 
   const contactInfo = [
-    { icon: EmailIcon, text: 'contact@zoshlibrary.com' },
-    { icon: PhoneIcon, text: '+1 (555) 123-4567' },
+    { icon: EmailIcon, text: 'kylychbek.parpiev@alatoo.edu.kg' },
+    { icon: PhoneIcon, text: '+996 773 191 101' },
     { icon: LocationOnIcon, text: '123 Library St, Reading City, RC 12345' },
   ];
 
@@ -181,7 +181,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {currentYear} Zosh Library. All rights reserved.
+              © {currentYear} The Library. All rights reserved.
             </p>
 
             {/* Social Links */}
@@ -205,7 +205,7 @@ const Footer = () => {
 
             {/* Made with Love */}
             <p className="text-gray-400 text-sm">
-              Made with <span className="text-red-500">❤</span> by Zosh Team
+              Made with <span className="text-red-500">❤</span> by Kylychbek Parpiev
             </p>
           </div>
         </div>

@@ -33,7 +33,7 @@ const SubscriptionPlanForm = ({
     name: "",
     description: "",
     price: 0,
-    currency: "INR",
+    currency: "USD",
     durationDays: 30,
     maxBooksAllowed: 5,
     maxDaysPerBook: 14,
@@ -51,7 +51,7 @@ const SubscriptionPlanForm = ({
         name: plan.name || "",
         description: plan.description || "",
         price: plan.price || 0,
-        currency: plan.currency || "INR",
+        currency: plan.currency || "USD",
         durationDays: plan.durationDays || 30,
         maxBooksAllowed: plan.maxBooksAllowed || 5,
         maxDaysPerBook: plan.maxDaysPerBook || 14,
@@ -67,7 +67,7 @@ const SubscriptionPlanForm = ({
         name: "",
         description: "",
         price: 0,
-        currency: "INR",
+        currency: "USD",
         durationDays: 30,
         maxBooksAllowed: 5,
         maxDaysPerBook: 14,
@@ -183,7 +183,7 @@ const SubscriptionPlanForm = ({
                 setFormData({ ...formData, currency: e.target.value })
               }
               required
-              helperText="e.g., USD, EUR, INR"
+              helperText="e.g., USD, EUR, SOM"
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

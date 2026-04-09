@@ -17,6 +17,8 @@ import { checkIfInWishlist } from "../wishlist/wishlistThunk";
 const initialState = {
   books: [],
   currentBook: null,
+  totalElements: 0,
+  totalPages: 0,
   searchResults: {
     content: [],
     totalPages: 0,
@@ -68,170 +70,174 @@ const bookSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ==================== CREATE OPERATIONS ====================
-      // Create book
-      .addCase(createBook.pending, (state) => {
-        state.actionLoading = true;
-        state.error = null;
-      })
-      .addCase(createBook.fulfilled, (state, action) => {
-        state.actionLoading = false;
-        state.books.unshift(action.payload);
-      })
-      .addCase(createBook.rejected, (state, action) => {
-        state.actionLoading = false;
-        state.error = action.payload;
-      })
+        // ==================== CREATE OPERATIONS ====================
+        // Create book
+        .addCase(createBook.pending, (state) => {
+          state.actionLoading = true;
+          state.error = null;
+        })
+        .addCase(createBook.fulfilled, (state, action) => {
+          state.actionLoading = false;
+          state.books.unshift(action.payload);
+        })
+        .addCase(createBook.rejected, (state, action) => {
+          state.actionLoading = false;
+          state.error = action.payload;
+        })
 
-      // Create books bulk
-      .addCase(createBooksBulk.pending, (state) => {
-        state.actionLoading = true;
-        state.error = null;
-      })
-      .addCase(createBooksBulk.fulfilled, (state, action) => {
-        state.actionLoading = false;
-        state.books.unshift(...action.payload);
-      })
-      .addCase(createBooksBulk.rejected, (state, action) => {
-        state.actionLoading = false;
-        state.error = action.payload;
-      })
+        // Create books bulk
+        .addCase(createBooksBulk.pending, (state) => {
+          state.actionLoading = true;
+          state.error = null;
+        })
+        .addCase(createBooksBulk.fulfilled, (state, action) => {
+          state.actionLoading = false;
+          state.books.unshift(...action.payload);
+        })
+        .addCase(createBooksBulk.rejected, (state, action) => {
+          state.actionLoading = false;
+          state.error = action.payload;
+        })
 
-      // ==================== READ OPERATIONS ====================
-      // Fetch books
-      .addCase(fetchBooks.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchBooks.fulfilled, (state, action) => {
-        state.loading = false;
-        state.books = action.payload.content || [];
-        state.searchResults = action.payload;
-      })
-      .addCase(fetchBooks.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+        // ==================== READ OPERATIONS ====================
+        // Fetch books
+        .addCase(fetchBooks.pending, (state) => {
+          state.loading = true;
+          state.error = null;
+        })
+        .addCase(fetchBooks.fulfilled, (state, action) => {
+          state.loading = false;
+          state.books = action.payload.content || [];
+          state.totalElements = action.payload.totalElements || 0;
+          state.totalPages = action.payload.totalPages || 0;
+          state.searchResults = action.payload;
+        })
+        .addCase(fetchBooks.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+        })
 
-      // Search books
-      .addCase(searchBooks.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(searchBooks.fulfilled, (state, action) => {
-        state.loading = false;
-        state.books = action.payload.content || [];
-        state.searchResults = action.payload;
-      })
-      .addCase(searchBooks.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+        // Search books
+        .addCase(searchBooks.pending, (state) => {
+          state.loading = true;
+          state.error = null;
+        })
+        .addCase(searchBooks.fulfilled, (state, action) => {
+          state.loading = false;
+          state.books = action.payload.content || [];
+          state.totalElements = action.payload.totalElements || 0;
+          state.totalPages = action.payload.totalPages || 0;
+          state.searchResults = action.payload;
+        })
+        .addCase(searchBooks.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+        })
 
-      // Fetch book by ID
-      .addCase(fetchBookById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchBookById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentBook = action.payload;
-      })
-      .addCase(fetchBookById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ==================== CHECK IF IN WISHLIST ====================
-      // .addCase(checkIfInWishlist.pending, (state) => {
-      //   state.loading = true;
-      //   state.error = null;
-      // })
-      // .addCase(checkIfInWishlist.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   const { bookId, isInWishlist } = action.payload;
-      //   // state.wishlistStatus[bookId] = isInWishlist;
-      // })
-      // .addCase(checkIfInWishlist.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = action.payload;
-      // })
-
-      // Fetch book by ISBN
-      .addCase(fetchBookByIsbn.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchBookByIsbn.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentBook = action.payload;
-      })
-      .addCase(fetchBookByIsbn.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ==================== UPDATE OPERATIONS ====================
-      // Update book
-      .addCase(updateBook.pending, (state) => {
-        state.actionLoading = true;
-        state.error = null;
-      })
-      .addCase(updateBook.fulfilled, (state, action) => {
-        state.actionLoading = false;
-        const index = state.books.findIndex(
-          (book) => book.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.books[index] = action.payload;
-        }
-        if (state.currentBook?.id === action.payload.id) {
+        // Fetch book by ID
+        .addCase(fetchBookById.pending, (state) => {
+          state.loading = true;
+          state.error = null;
+        })
+        .addCase(fetchBookById.fulfilled, (state, action) => {
+          state.loading = false;
           state.currentBook = action.payload;
-        }
-      })
-      .addCase(updateBook.rejected, (state, action) => {
-        state.actionLoading = false;
-        state.error = action.payload;
-      })
+        })
+        .addCase(fetchBookById.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+        })
 
-      // ==================== DELETE OPERATIONS ====================
-      // Delete book (soft delete)
-      .addCase(deleteBook.pending, (state) => {
-        state.actionLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteBook.fulfilled, (state, action) => {
-        state.actionLoading = false;
-        state.books = state.books.filter(
-          (book) => book.id !== action.payload.id
-        );
-      })
-      .addCase(deleteBook.rejected, (state, action) => {
-        state.actionLoading = false;
-        state.error = action.payload;
-      })
+        // ==================== CHECK IF IN WISHLIST ====================
+        // .addCase(checkIfInWishlist.pending, (state) => {
+        //   state.loading = true;
+        //   state.error = null;
+        // })
+        // .addCase(checkIfInWishlist.fulfilled, (state, action) => {
+        //   state.loading = false;
+        //   const { bookId, isInWishlist } = action.payload;
+        //   // state.wishlistStatus[bookId] = isInWishlist;
+        // })
+        // .addCase(checkIfInWishlist.rejected, (state, action) => {
+        //   state.loading = false;
+        //   state.error = action.payload;
+        // })
 
-      // Hard delete book
-      .addCase(hardDeleteBook.pending, (state) => {
-        state.actionLoading = true;
-        state.error = null;
-      })
-      .addCase(hardDeleteBook.fulfilled, (state, action) => {
-        state.actionLoading = false;
-        state.books = state.books.filter(
-          (book) => book.id !== action.payload.id
-        );
-      })
-      .addCase(hardDeleteBook.rejected, (state, action) => {
-        state.actionLoading = false;
-        state.error = action.payload;
-      })
+        // Fetch book by ISBN
+        .addCase(fetchBookByIsbn.pending, (state) => {
+          state.loading = true;
+          state.error = null;
+        })
+        .addCase(fetchBookByIsbn.fulfilled, (state, action) => {
+          state.loading = false;
+          state.currentBook = action.payload;
+        })
+        .addCase(fetchBookByIsbn.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+        })
 
-      // ==================== STATISTICS ====================
-      // Fetch book stats
-      .addCase(fetchBookStats.fulfilled, (state, action) => {
-        state.stats = action.payload;
-      });
+        // ==================== UPDATE OPERATIONS ====================
+        // Update book
+        .addCase(updateBook.pending, (state) => {
+          state.actionLoading = true;
+          state.error = null;
+        })
+        .addCase(updateBook.fulfilled, (state, action) => {
+          state.actionLoading = false;
+          const index = state.books.findIndex(
+              (book) => book.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.books[index] = action.payload;
+          }
+          if (state.currentBook?.id === action.payload.id) {
+            state.currentBook = action.payload;
+          }
+        })
+        .addCase(updateBook.rejected, (state, action) => {
+          state.actionLoading = false;
+          state.error = action.payload;
+        })
+
+        // ==================== DELETE OPERATIONS ====================
+        // Delete book (soft delete)
+        .addCase(deleteBook.pending, (state) => {
+          state.actionLoading = true;
+          state.error = null;
+        })
+        .addCase(deleteBook.fulfilled, (state, action) => {
+          state.actionLoading = false;
+          state.books = state.books.filter(
+              (book) => book.id !== action.payload.id
+          );
+        })
+        .addCase(deleteBook.rejected, (state, action) => {
+          state.actionLoading = false;
+          state.error = action.payload;
+        })
+
+        // Hard delete book
+        .addCase(hardDeleteBook.pending, (state) => {
+          state.actionLoading = true;
+          state.error = null;
+        })
+        .addCase(hardDeleteBook.fulfilled, (state, action) => {
+          state.actionLoading = false;
+          state.books = state.books.filter(
+              (book) => book.id !== action.payload.id
+          );
+        })
+        .addCase(hardDeleteBook.rejected, (state, action) => {
+          state.actionLoading = false;
+          state.error = action.payload;
+        })
+
+        // ==================== STATISTICS ====================
+        // Fetch book stats
+        .addCase(fetchBookStats.fulfilled, (state, action) => {
+          state.stats = action.payload;
+        });
   },
 });
 

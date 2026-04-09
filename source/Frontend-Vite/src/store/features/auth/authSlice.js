@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { login, signup, fetchCurrentUser, forgotPassword, resetPassword, getUsersList } from './authThunk';
 
-// Initial state
 const initialState = {
   user: null,
   token: localStorage.getItem('token') || null,
@@ -26,7 +25,6 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-      // Clear both token keys for consistency
       localStorage.removeItem('token');
       localStorage.removeItem('jwt');
     },

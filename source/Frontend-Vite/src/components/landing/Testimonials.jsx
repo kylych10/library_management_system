@@ -9,7 +9,7 @@ const Testimonials = () => {
       role: 'Teacher',
       image: '👩‍🏫',
       rating: 5,
-      text: 'Zosh Library has transformed the way I discover and access books. The online reservation system is incredibly convenient, and the collection is outstanding!',
+      text: 'The Library has transformed the way I discover and access books. The online reservation system is incredibly convenient, and the collection is outstanding!',
       color: 'text-blue-600',
     },
     {

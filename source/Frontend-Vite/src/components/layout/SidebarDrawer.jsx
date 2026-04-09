@@ -154,7 +154,7 @@ const SidebarDrawer = ({ isMobile, setMobileOpen, handleProfileMenuClose }) => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            ZoshBook
+            TheLibrary
           </Typography>
           <Typography
             variant="caption"

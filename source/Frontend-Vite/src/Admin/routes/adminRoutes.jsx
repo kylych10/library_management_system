@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import AdminLayout from '../layout/AdminLayout';
-import DashboardPage from '../pages/DashboardPage';
+import DashboardPage from '../pages/AdminDashboard.jsx';
 
 // Lazy load pages for better performance
 const AdminBooksPage = React.lazy(() => import('../pages/books/AdminBooksPage'));

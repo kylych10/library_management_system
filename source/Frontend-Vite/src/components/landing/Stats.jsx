@@ -53,7 +53,7 @@ const Stats = () => {
             </span>
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Join thousands of satisfied readers who trust Zosh Library for their reading journey.
+            Join thousands of satisfied readers who trust the Library for their reading journey.
           </p>
         </div>
 

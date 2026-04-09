@@ -272,7 +272,7 @@ export default function AdminSubscriptionPlansPage() {
                   ).toFixed(2)
                 : "0.00"}
             </Typography>
-            <Typography variant="body2">Avg Price (INR)</Typography>
+            <Typography variant="body2">Avg Price (USD)</Typography>
           </Paper>
         </Grid>
       </Grid>

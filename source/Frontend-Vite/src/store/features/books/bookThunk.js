@@ -11,17 +11,22 @@ const API_URL = '/api/books';
  * POST /api/books
  */
 export const createBook = createAsyncThunk(
-  'books/createBook',
-  async (bookData, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`${API_URL}`, bookData, {
-        headers: getHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create book');
+    'books/createBook',
+    async (bookData, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`${API_URL}`, bookData, {
+                headers: getHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            const data = error.response?.data;
+            // Handle validation errors (map of field -> message)
+            if (data?.errors) {
+                return rejectWithValue(data);
+            }
+            return rejectWithValue(data?.message || 'Failed to create book');
+        }
     }
-  }
 );
 
 /**
@@ -29,17 +34,17 @@ export const createBook = createAsyncThunk(
  * POST /api/books/bulk
  */
 export const createBooksBulk = createAsyncThunk(
-  'books/createBooksBulk',
-  async (booksData, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`${API_URL}/bulk`, booksData, {
-        headers: getHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create books in bulk');
+    'books/createBooksBulk',
+    async (booksData, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`${API_URL}/bulk`, booksData, {
+                headers: getHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to create books in bulk');
+        }
     }
-  }
 );
 
 /**
@@ -47,17 +52,17 @@ export const createBooksBulk = createAsyncThunk(
  * GET /api/books/{id}
  */
 export const fetchBookById = createAsyncThunk(
-  'books/fetchBookById',
-  async (bookId, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`${API_URL}/${bookId}`, {
-        headers: getHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch book');
+    'books/fetchBookById',
+    async (bookId, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${API_URL}/${bookId}`, {
+                headers: getHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch book');
+        }
     }
-  }
 );
 
 /**
@@ -65,17 +70,17 @@ export const fetchBookById = createAsyncThunk(
  * GET /api/books/isbn/{isbn}
  */
 export const fetchBookByIsbn = createAsyncThunk(
-  'books/fetchBookByIsbn',
-  async (isbn, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`${API_URL}/isbn/${isbn}`, {
-        headers: getHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch book by ISBN');
+    'books/fetchBookByIsbn',
+    async (isbn, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${API_URL}/isbn/${isbn}`, {
+                headers: getHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch book by ISBN');
+        }
     }
-  }
 );
 
 /**
@@ -83,20 +88,24 @@ export const fetchBookByIsbn = createAsyncThunk(
  * PUT /api/books/{id}
  */
 export const updateBook = createAsyncThunk(
-  'books/updateBook',
-  async ({ id, bookData }, { rejectWithValue }) => {
-    try {
-      const response = await api.put(`${API_URL}/${id}`, bookData, {
-        headers: getHeaders(),
-      });
-       console.log("update book -- ",response.data);
-      return response.data;
-     
-    } catch (error) {
-      console.log("update book error -- ",error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to update book');
+    'books/updateBook',
+    async ({ id, bookData }, { rejectWithValue }) => {
+        try {
+            const response = await api.put(`${API_URL}/${id}`, bookData, {
+                headers: getHeaders(),
+            });
+            console.log("update book -- ",response.data);
+            return response.data;
+
+        } catch (error) {
+            console.log("update book error -- ",error);
+            const data = error.response?.data;
+            if (data?.errors) {
+                return rejectWithValue(data);
+            }
+            return rejectWithValue(data?.message || 'Failed to update book');
+        }
     }
-  }
 );
 
 /**
@@ -104,17 +113,17 @@ export const updateBook = createAsyncThunk(
  * DELETE /api/books/{id}
  */
 export const deleteBook = createAsyncThunk(
-  'books/deleteBook',
-  async (bookId, { rejectWithValue }) => {
-    try {
-      const response = await api.delete(`${API_URL}/${bookId}`, {
-        headers: getHeaders(),
-      });
-      return { id: bookId, message: response.data };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete book');
+    'books/deleteBook',
+    async (bookId, { rejectWithValue }) => {
+        try {
+            const response = await api.delete(`${API_URL}/${bookId}`, {
+                headers: getHeaders(),
+            });
+            return { id: bookId, message: response.data };
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to delete book');
+        }
     }
-  }
 );
 
 /**
@@ -122,17 +131,17 @@ export const deleteBook = createAsyncThunk(
  * DELETE /api/books/{id}/permanent
  */
 export const hardDeleteBook = createAsyncThunk(
-  'books/hardDeleteBook',
-  async (bookId, { rejectWithValue }) => {
-    try {
-      const response = await api.delete(`${API_URL}/${bookId}/permanent`, {
-        headers: getHeaders(),
-      });
-      return { id: bookId, message: response.data };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to permanently delete book');
+    'books/hardDeleteBook',
+    async (bookId, { rejectWithValue }) => {
+        try {
+            const response = await api.delete(`${API_URL}/${bookId}/permanent`, {
+                headers: getHeaders(),
+            });
+            return { id: bookId, message: response.data };
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to permanently delete book');
+        }
     }
-  }
 );
 
 // ==================== UNIFIED SEARCH & LIST ====================
@@ -145,44 +154,44 @@ export const hardDeleteBook = createAsyncThunk(
  * Use query parameters for simple filters.
  */
 export const fetchBooks = createAsyncThunk(
-  'books/fetchBooks',
-  async ({
-    genreId = null,
-    availableOnly = null,
-    activeOnly = true,
-    page = 0,
-    size = 20,
-    sortBy = 'createdAt',
-    sortDirection = 'DESC'
-  } = {}, { rejectWithValue }) => {
-    try {
-      const params = {
-        page,
-        size,
-        sortBy,
-        sortDirection,
-        activeOnly,
-      };
+    'books/fetchBooks',
+    async ({
+               genreId = null,
+               availableOnly = null,
+               activeOnly = true,
+               page = 0,
+               size = 20,
+               sortBy = 'createdAt',
+               sortDirection = 'DESC'
+           } = {}, { rejectWithValue }) => {
+        try {
+            const params = {
+                page,
+                size,
+                sortBy,
+                sortDirection,
+                activeOnly,
+            };
 
-      // Only add optional filters if they are provided
-      if (genreId !== null && genreId !== undefined) {
-        params.genreId = genreId;
-      }
-      if (availableOnly !== null && availableOnly !== undefined) {
-        params.availableOnly = availableOnly;
-      }
+            // Only add optional filters if they are provided
+            if (genreId !== null && genreId !== undefined) {
+                params.genreId = genreId;
+            }
+            if (availableOnly !== null && availableOnly !== undefined) {
+                params.availableOnly = availableOnly;
+            }
 
-      const response = await api.get(`${API_URL}`, {
-        params,
-        headers: getHeaders(),
-      });
-      console.log("fetch book -- ",response.data);
-      return response.data;
-    } catch (error) {
-      console.log("fetch book error -- ",error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch books');
+            const response = await api.get(`${API_URL}`, {
+                params,
+                headers: getHeaders(),
+            });
+            console.log("fetch book -- ",response.data);
+            return response.data;
+        } catch (error) {
+            console.log("fetch book error -- ",error);
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch books');
+        }
     }
-  }
 );
 
 /**
@@ -192,21 +201,21 @@ export const fetchBooks = createAsyncThunk(
  * Use this endpoint when you need to combine text search with filters.
  */
 export const searchBooks = createAsyncThunk(
-  'books/searchBooks',
-  async (searchRequest, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`${API_URL}/search`, 
-        searchRequest, {
-        headers: getHeaders(),
-      });
-      console.log("search book -- ",response.data);
-      return response.data;
-    } catch (error) {
-      console.log("search book error -- ",error);
-      return rejectWithValue(error.response?.data?.message 
-        || 'Search failed');
+    'books/searchBooks',
+    async (searchRequest, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`${API_URL}/search`,
+                searchRequest, {
+                    headers: getHeaders(),
+                });
+            console.log("search book -- ",response.data);
+            return response.data;
+        } catch (error) {
+            console.log("search book error -- ",error);
+            return rejectWithValue(error.response?.data?.message
+                || 'Search failed');
+        }
     }
-  }
 );
 
 // ==================== STATISTICS ====================
@@ -216,15 +225,15 @@ export const searchBooks = createAsyncThunk(
  * GET /api/books/stats
  */
 export const fetchBookStats = createAsyncThunk(
-  'books/fetchBookStats',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`${API_URL}/stats`, {
-        headers: getHeaders(),
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch book statistics');
+    'books/fetchBookStats',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`${API_URL}/stats`, {
+                headers: getHeaders(),
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch book statistics');
+        }
     }
-  }
 );

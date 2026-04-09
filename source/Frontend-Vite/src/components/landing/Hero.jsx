@@ -21,7 +21,7 @@ const Hero = () => {
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-6 animate-fade-in">
               <AutoAwesomeIcon sx={{ fontSize: 16 }} />
-              <span>Welcome to Zosh Library</span>
+              <span>Welcome to the Library</span>
             </div>
 
             {/* Main Heading */}
