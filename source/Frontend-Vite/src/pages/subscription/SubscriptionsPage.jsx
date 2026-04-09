@@ -23,7 +23,7 @@ import {
   cancelSubscription,
   fetchActiveSubscription,
   renewSubscription,
-  subscribe,
+  subscribeFree,
 } from "../../store/features/subscriptions/subscriptionThunk";
 import BenefitSection from "./BenefitSection";
 
@@ -86,38 +86,16 @@ const SubscriptionsPage = () => {
   };
 
   // Handle subscribe confirmation
-  const handleSubscribeConfirm = async ({ planId, paymentGateway }) => {
+  const handleSubscribeConfirm = async ({ planId }) => {
     setSubscribeDialog((prev) => ({ ...prev, loading: true }));
 
     try {
-      const result = await dispatch(
-        subscribe({
-          planId,
-          paymentGateway,
-        })
-      ).unwrap();
-
-      // Check if payment initiation was successful
-      if (result.paymentUrl) {
-        // Redirect to payment gateway
-        window.location.href = result.paymentUrl;
-      } else if (result.message) {
-        showSnackbar(result.message, "success");
-        setSubscribeDialog({ open: false, plan: null, loading: false });
-        // Refresh subscriptions
-        dispatch(fetchActiveSubscription());
-      } else {
-        showSnackbar(
-          "Subscription initiated! Redirecting to payment...",
-          "success"
-        );
-        setSubscribeDialog({ open: false, plan: null, loading: false });
-      }
+      await dispatch(subscribeFree(planId)).unwrap();
+      showSnackbar("Subscription activated! You can now check out books.", "success");
+      setSubscribeDialog({ open: false, plan: null, loading: false });
+      dispatch(fetchActiveSubscription());
     } catch (err) {
-      showSnackbar(
-        err.message || "Failed to subscribe. Please try again.",
-        "error"
-      );
+      showSnackbar(err.message || "Failed to subscribe. Please try again.", "error");
       setSubscribeDialog((prev) => ({ ...prev, loading: false }));
     }
   };

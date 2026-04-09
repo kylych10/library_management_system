@@ -113,8 +113,10 @@ export default function AdminPaymentsPage() {
       COMPLETED: { color: 'success', label: 'Completed' },
       FAILED: { color: 'error', label: 'Failed' },
       PENDING: { color: 'warning', label: 'Pending' },
+      PROCESSING: { color: 'warning', label: 'Processing' },
       INITIATED: { color: 'info', label: 'Initiated' },
       REFUNDED: { color: 'info', label: 'Refunded' },
+      CANCELLED: { color: 'default', label: 'Cancelled' },
     };
     const config = statusMap[status] || { color: 'default', label: status };
     return <Chip label={config.label} color={config.color} size="small" />;
@@ -163,7 +165,7 @@ export default function AdminPaymentsPage() {
       headerName: 'Amount',
       renderCell: (row) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {row.currency || 'INR'} {(row.amount ).toFixed(2)}
+          {row.currency || 'USD'} {(row.amount || 0).toFixed(2)}
         </Typography>
       ),
     },
@@ -300,6 +302,8 @@ export default function AdminPaymentsPage() {
                 <MenuItem value="INITIATED">Initiated</MenuItem>
                 <MenuItem value="FAILED">Failed</MenuItem>
                 <MenuItem value="REFUNDED">Refunded</MenuItem>
+                <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                <MenuItem value="PROCESSING">Processing</MenuItem>
               </Select>
             </FormControl>
           </Grid>

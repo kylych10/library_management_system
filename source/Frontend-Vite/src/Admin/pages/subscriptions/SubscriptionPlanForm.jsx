@@ -50,7 +50,7 @@ const SubscriptionPlanForm = ({
         planCode: plan.planCode || "",
         name: plan.name || "",
         description: plan.description || "",
-        price: plan.price || 0,
+        price: plan.price ? plan.price / 100 : 0,
         currency: plan.currency || "USD",
         durationDays: plan.durationDays || 30,
         maxBooksAllowed: plan.maxBooksAllowed || 5,
@@ -82,13 +82,15 @@ const SubscriptionPlanForm = ({
 
    const handleSubmit = async () => {
       try {
+        // Price is entered in dollars by the user; backend stores in cents
+        const payload = { ...formData, price: Math.round(formData.price * 100) };
         if (plan) {
-          await dispatch(updatePlan({ id: plan.id, planDTO: formData })).unwrap();
+          await dispatch(updatePlan({ id: plan.id, planDTO: payload })).unwrap();
         } else {
-          await dispatch(createPlan(formData)).unwrap();
+          await dispatch(createPlan(payload)).unwrap();
         }
         handleCloseDialog();
-    
+
       } catch (error) {
         console.error('Error saving plan:', error);
       }

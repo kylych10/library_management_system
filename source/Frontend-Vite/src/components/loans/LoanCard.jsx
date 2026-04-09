@@ -163,7 +163,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
         {loan.fineAmount > 0 && !loan.finePaid && (
           <Chip
             icon={<PaymentIcon />}
-            label={`Fine: ₹${loan.fineAmount.toFixed(2)}`}
+            label={`Fine: $${loan.fineAmount.toFixed(2)}`}
             size="small"
             color="error"
             sx={{
@@ -396,7 +396,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
                 transition: 'all 0.3s',
               }}
             >
-              Pay Fine ₹{loan.fineAmount.toFixed(2)}
+              Pay Fine ${loan.fineAmount.toFixed(2)}
             </Button>
           )}
 

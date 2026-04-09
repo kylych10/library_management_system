@@ -21,8 +21,8 @@ public class BookDTO {
     private Long id;
 
     @NotBlank(message = "ISBN is mandatory")
-    @Pattern(regexp = "^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$",
-            message = "ISBN format is invalid")
+    @Pattern(regexp = "^[0-9]{9}[0-9X]$|^(?:[0-9]+[- ]?){4}[0-9X]$|^97[89][0-9]{10}$|^97[89][- ]?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9]$",
+            message = "ISBN format is invalid. Use ISBN-10 or ISBN-13 format (e.g., 0-13-468599-1 or 978-0-13-468599-1)")
     private String isbn;
 
     @NotBlank(message = "Title is mandatory")

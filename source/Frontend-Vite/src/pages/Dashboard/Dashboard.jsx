@@ -23,6 +23,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useDispatch } from "react-redux";
 
 import { fetchMyBookLoans } from "../../store/features/bookLoans/bookLoanThunk";
+import { getMyReservations } from "../../store/features/reservations/reservationThunk";
 import CurrentLoans from "./CurrentLoans";
 import { useSelector } from "react-redux";
 import Reservation from "./Reservation";
@@ -39,34 +40,25 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const dispatch = useDispatch();
   const { auth } = useSelector((store) => store);
-  const { myLoans } = useSelector((store) => store.bookLoans);
+  const { myLoans, activeLoans } = useSelector((store) => store.bookLoans);
   const { reservations } = useSelector((store) => store.reservations);
 
-  // Mock data - Replace with actual API calls
-  const [stats] = useState({
-    currentLoans: 3,
-    activeReservations: 2,
-    booksRead: 24,
-    readingStreak: 7,
-  });
+  const READING_GOAL = 30;
+  const currentYear = new Date().getFullYear();
 
-  const loadLoans = () => {
-    const status = null;
-    dispatch(
-      fetchMyBookLoans({
-        status,
-        page: 0,
-        size: 20,
-      })
-    );
-  };
+  const booksRead = myLoans.filter((loan) => {
+    if (!loan.returnDate) return false;
+    return new Date(loan.returnDate).getFullYear() === currentYear;
+  }).length;
 
   useEffect(() => {
-    loadLoans();
+    dispatch(fetchMyBookLoans({ status: null, page: 0, size: 100 }));
+    dispatch(fetchMyBookLoans({ status: true, page: 0, size: 100 }));
+    dispatch(getMyReservations({ page: 0, size: 100 }));
   }, [auth.user]);
 
-  const readingProgress = Math.min((stats.booksRead / 30) * 100, 100); // Goal: 30 books
-  const statsData = statsConfig({ myLoans, reservations, stats });
+  const readingProgress = Math.min((booksRead / READING_GOAL) * 100, 100);
+  const statsData = statsConfig({ myLoans: activeLoans, reservations, booksRead, readingStreak: 0 });
   return (
   
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-500 py-8">
@@ -105,10 +97,10 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-1">
-                  2025 Reading Goal
+                  {currentYear} Reading Goal
                 </h3>
                 <p className="text-gray-600">
-                  {stats.booksRead} of 30 books read
+                  {booksRead} of {READING_GOAL} books read
                 </p>
               </div>
               <div className="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full">

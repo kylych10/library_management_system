@@ -4,7 +4,7 @@ import HistoryIcon from "@mui/icons-material/History"
 import TrendingUpIcon from "@mui/icons-material/TrendingUp"
 import { LibraryBooks } from "@mui/icons-material"
 
-export const statsConfig = ({ myLoans, reservations, stats }) => [
+export const statsConfig = ({ myLoans, reservations, booksRead, readingStreak }) => [
   {
     id: "loans",
     title: "Current Loans",
@@ -27,7 +27,7 @@ export const statsConfig = ({ myLoans, reservations, stats }) => [
     id: "read",
     title: "Books Read",
     subtitle: "This year",
-    value: myLoans.length,
+    value: booksRead,
     icon: <HistoryIcon sx={{ fontSize: 32, color: "#10B981" }} />,
     bgColor: "bg-green-100",
     textColor: "text-green-600",
@@ -36,7 +36,7 @@ export const statsConfig = ({ myLoans, reservations, stats }) => [
     id: "streak",
     title: "Day Streak",
     subtitle: "Keep it going!",
-    value: stats.readingStreak,
+    value: readingStreak,
     icon: <TrendingUpIcon sx={{ fontSize: 32, color: "#F59E0B" }} />,
     bgColor: "bg-orange-100",
     textColor: "text-orange-600",

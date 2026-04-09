@@ -36,7 +36,7 @@ INSERT INTO subscription_plans (
     'Monthly Plan',
     'Access to library for 1 month',
     30,
-    29900, -- ₹299.00 in paise
+    29900, -- $299.00 in cents
     'INR',
     5,
     14,
@@ -51,7 +51,7 @@ INSERT INTO subscription_plans (
     'Quarterly Plan',
     'Access to library for 3 months with extended benefits',
     90,
-    79900, -- ₹799.00 in paise
+    79900, -- $799.00 in cents
     'INR',
     10,
     21,
@@ -66,7 +66,7 @@ INSERT INTO subscription_plans (
     'Yearly Plan',
     'Best value - Full year access with maximum benefits',
     365,
-    249900, -- ₹2499.00 in paise
+    249900, -- $2499.00 in cents
     'INR',
     15,
     30,

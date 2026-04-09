@@ -1,5 +1,6 @@
 package com.kylych.oauth2;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kylych.configurations.JwtProvider;
 import com.kylych.modal.User;
 import jakarta.servlet.ServletException;
@@ -30,11 +31,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         // Create authentication object for JWT generation
         org.springframework.security.authentication.UsernamePasswordAuthenticationToken auth =
-            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                user.getEmail(),
-                null,
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
-            );
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        user.getEmail(),
+                        null,
+                        Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+                );
 
         // Generate JWT token
         String token = jwtProvider.generateToken(auth);
@@ -51,15 +52,15 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     }
 
     protected String determineTargetUrl(String token, User user) {
-        // Redirect to frontend with token as query parameter
-        // Frontend will extract the token and store it
-        String frontendUrl = "http://localhost:5173/oauth2/callback";
+        String frontendUrl = "http://localhost:5174/oauth2/callback";
 
         return UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("token", token)
                 .queryParam("email", user.getEmail())
                 .queryParam("fullName", user.getFullName())
                 .queryParam("role", user.getRole().name())
-                .build().toUriString();
+                .build()
+                .encode()
+                .toUriString();
     }
 }

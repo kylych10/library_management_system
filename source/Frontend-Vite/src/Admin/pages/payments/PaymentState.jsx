@@ -6,7 +6,7 @@ const PaymentState = ({ allPayments }) => {
   const calculateTotalRevenue = () => {
     return (allPayments || [])
       .filter((p) => p.status === 'SUCCESS' || p.status === 'COMPLETED')
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
+      .reduce((sum, p) => sum + ((p.amount || 0) / 100), 0);
   };
 
   return (
@@ -14,7 +14,7 @@ const PaymentState = ({ allPayments }) => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.lighter' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
-              ₹{calculateTotalRevenue().toFixed(2)}
+              ${calculateTotalRevenue().toFixed(2)}
             </Typography>
             <Typography variant="body2">Total Revenue</Typography>
           </Paper>

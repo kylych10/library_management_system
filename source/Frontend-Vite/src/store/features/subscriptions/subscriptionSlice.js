@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import {
   subscribe,
+  subscribeFree,
   fetchUserSubscriptions,
   fetchActiveSubscription,
   checkValidSubscription,
@@ -62,7 +63,7 @@ const subscriptionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Subscribe
+      // Subscribe (payment-based)
       .addCase(subscribe.pending, (state) => {
         state.subscribeLoading = true;
         state.error = null;
@@ -71,6 +72,21 @@ const subscriptionSlice = createSlice({
         state.subscribeLoading = false;
       })
       .addCase(subscribe.rejected, (state, action) => {
+        state.subscribeLoading = false;
+        state.error = action.payload;
+      })
+
+      // Subscribe free (no payment)
+      .addCase(subscribeFree.pending, (state) => {
+        state.subscribeLoading = true;
+        state.error = null;
+      })
+      .addCase(subscribeFree.fulfilled, (state, action) => {
+        state.subscribeLoading = false;
+        state.activeSubscription = action.payload;
+        state.hasValidSubscription = true;
+      })
+      .addCase(subscribeFree.rejected, (state, action) => {
         state.subscribeLoading = false;
         state.error = action.payload;
       })

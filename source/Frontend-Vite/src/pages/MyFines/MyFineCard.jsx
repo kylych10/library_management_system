@@ -220,7 +220,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
             <InfoItem
               icon={<TrendingUp fontSize="small" />}
               label="Total Amount"
-              value={`₹${parseFloat(fine.amount).toFixed(2)}`}
+              value={`$${parseFloat(fine.amount).toFixed(2)}`}
               color="#1976d2"
             />
           </Grid>
@@ -228,7 +228,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
             <InfoItem
               icon={<CheckCircle fontSize="small" />}
               label="Amount Paid"
-              value={`₹${parseFloat(fine.amountPaid || 0).toFixed(2)}`}
+              value={`$${parseFloat(fine.amountPaid || 0).toFixed(2)}`}
               color="#16A34A"
               highlight={fine.amountPaid > 0}
             />
@@ -237,7 +237,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
             <InfoItem
               icon={<Warning fontSize="small" />}
               label="Outstanding"
-              value={`₹${parseFloat(fine.amountOutstanding || 0).toFixed(2)}`}
+              value={`$${parseFloat(fine.amountOutstanding || 0).toFixed(2)}`}
               color="#DC2626"
               highlight={fine.amountOutstanding > 0}
             />

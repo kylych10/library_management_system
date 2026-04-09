@@ -10,8 +10,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.kylych.domain.PaymentGateway;
 import com.kylych.domain.PaymentStatus;
 import com.kylych.domain.PaymentType;
+import java.util.List;
+import java.util.UUID;
 import com.kylych.exception.PaymentException;
 import com.kylych.exception.SubscriptionException;
 import com.kylych.exception.UserException;
@@ -117,6 +120,72 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         return paymentService
                 .initiatePayment(paymentInitiateRequest);
+    }
+
+    @Override
+    @Transactional
+    public SubscriptionDTO subscribeFree(Long planId) throws SubscriptionException, UserException {
+
+        User user = getCurrentAuthenticatedUser();
+
+        SubscriptionPlan plan = subscriptionPlanRepository.findById(planId)
+                .orElseThrow(() -> new SubscriptionException("Subscription plan not found with ID: " + planId));
+
+        if (!plan.getIsActive()) {
+            throw new SubscriptionException("Subscription plan is not currently available");
+        }
+
+        // Cancel any existing active subscription first
+        subscriptionRepository.findActiveSubscriptionByUserId(user.getId(), LocalDate.now())
+                .ifPresent(existing -> {
+                    existing.setIsActive(false);
+                    existing.setCancelledAt(LocalDateTime.now());
+                    existing.setCancellationReason("Replaced by new subscription");
+                    subscriptionRepository.save(existing);
+                });
+
+        Subscription subscription = new Subscription();
+        subscription.setUser(user);
+        subscription.setPlan(plan);
+        subscription.setAutoRenew(false);
+        subscription.initializeFromPlan();
+        subscription.setIsActive(true);
+        subscription.setStartDate(LocalDate.now());
+        subscription.calculateEndDate();
+
+        subscription = subscriptionRepository.save(subscription);
+        log.info("Free subscription activated for user {} with plan {}", user.getEmail(), plan.getName());
+
+        // Cancel any orphaned PENDING/PROCESSING subscription payments so they
+        // don't appear as "processing" in the admin payments view
+        List<Payment> orphanedPayments = paymentRepository.findByUserIdAndPaymentTypeAndStatusIn(
+                user.getId(),
+                PaymentType.MEMBERSHIP,
+                List.of(PaymentStatus.PENDING, PaymentStatus.PROCESSING)
+        );
+        for (Payment orphan : orphanedPayments) {
+            orphan.setStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(orphan);
+            log.info("Cancelled orphaned subscription payment ID: {}", orphan.getId());
+        }
+
+        // Create a completed payment record so it appears in admin payments management
+        Payment payment = new Payment();
+        payment.setUser(user);
+        payment.setSubscription(subscription);
+        payment.setPaymentType(PaymentType.MEMBERSHIP);
+        payment.setGateway(PaymentGateway.MANUAL);
+        payment.setAmount(subscription.getPrice() != null ? subscription.getPrice() : 0L);
+        payment.setCurrency(subscription.getCurrency() != null ? subscription.getCurrency() : "USD");
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setTransactionId("FREE_" + UUID.randomUUID());
+        payment.setDescription("Free Subscription - " + plan.getName());
+        payment.setInitiatedAt(LocalDateTime.now());
+        payment.setCompletedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+        log.info("Created SUCCESS payment record for free subscription, user: {}", user.getEmail());
+
+        return subscriptionMapper.toDTO(subscription);
     }
 
     @Override

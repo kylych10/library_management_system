@@ -137,7 +137,7 @@ export default function AdminUserSubscriptionsPage() {
 
   const calculateTotalRevenue = () => {
     return (allActiveSubscriptions || [])
-      .reduce((sum, s) => sum + (s.price || 0), 0);
+      .reduce((sum, s) => sum + ((s.price || 0) / 100), 0);
   };
 
   const columns = [
@@ -182,7 +182,7 @@ export default function AdminUserSubscriptionsPage() {
       headerName: 'Price',
       renderCell: (row) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {row.currency || 'INR'}{" "}{row.price || '0.00'}
+          ${((row.price || 0) / 100).toFixed(2)}
         </Typography>
       ),
     },
@@ -307,7 +307,7 @@ export default function AdminUserSubscriptionsPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.lighter' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-              ₹{calculateTotalRevenue().toFixed(2)}
+              ${calculateTotalRevenue().toFixed(2)}
             </Typography>
             <Typography variant="body2">Total Revenue</Typography>
           </Paper>

@@ -108,13 +108,20 @@ export default function AdminDashboard() {
   const stats = {
     totalBooks: bookStats?.totalActiveBooks || 0,
     activeLoans: loanStats?.activeCheckouts || 0,
-    totalUsers: usersList.length, // No endpoint available yet
-    monthlyRevenue: revenue?.monthlyRevenue, // Would need payment aggregation endpoint
+    totalUsers: usersList.length,
+    monthlyRevenue: revenue?.monthlyRevenue ?? 0,
     activeSubscriptions: allActiveSubscriptions.length || 0,
     pendingReservations: reservationCount || 0,
     totalReviews: reviewStatistics?.totalReviews || 0,
     overdueLoans: loanStats?.overdueCheckouts || 0,
   };
+
+  // Revenue % change from last month (from backend)
+  const revenueChange = revenue?.revenuePercentageChange ?? null;
+  const revenueChangeTrend = revenueChange === null ? undefined : revenueChange >= 0 ? 'up' : 'down';
+  const revenueChangeLabel = revenueChange === null
+    ? undefined
+    : `${revenueChange >= 0 ? '+' : ''}${revenueChange.toFixed(1)}%`;
 
   // Show loading state while fetching initial data
   const isLoading = booksLoading || loansLoading;
@@ -260,8 +267,6 @@ export default function AdminDashboard() {
             value={stats.totalBooks}
             icon={MenuBook}
             color="primary"
-            trend="up"
-            trendValue="+12%"
             subtitle="In collection"
           />
         </Grid>
@@ -271,8 +276,6 @@ export default function AdminDashboard() {
             value={stats.activeLoans}
             icon={EventNote}
             color="success"
-            trend="up"
-            trendValue="+8%"
             subtitle={`${stats.overdueLoans} overdue`}
           />
         </Grid>
@@ -282,19 +285,17 @@ export default function AdminDashboard() {
             value={stats.totalUsers}
             icon={People}
             color="info"
-            trend="up"
-            trendValue="+23%"
             subtitle="Registered members"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
             title="Revenue"
-            value={`$${stats.monthlyRevenue?.toLocaleString()}`}
+            value={`$${stats.monthlyRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={Payment}
             color="warning"
-            trend="up"
-            trendValue="+15%"
+            trend={revenueChangeTrend}
+            trendValue={revenueChangeLabel}
             subtitle="This month"
           />
         </Grid>

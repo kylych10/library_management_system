@@ -232,7 +232,7 @@ const PlanCard = ({ plan, onSubscribe, loading = false }) => {
                 backgroundClip: 'text',
               }}
             >
-              {plan.currency} {plan.price}
+              ${(plan.priceInMajorUnits ?? plan.price / 100).toFixed(2)}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
               /{plan.durationDays === 365 ? 'year' : plan.durationDays === 30 ? 'mo' : `${plan.durationDays}d`}

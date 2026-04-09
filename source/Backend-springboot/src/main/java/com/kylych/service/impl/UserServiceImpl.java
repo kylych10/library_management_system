@@ -5,6 +5,7 @@ import com.kylych.configurations.JwtProvider;
 import com.kylych.domain.UserRole;
 import com.kylych.exception.UserException;
 import com.kylych.modal.User;
+import com.kylych.payload.dto.UserDTO;
 import com.kylych.repository.UserRepository;
 import com.kylych.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -73,6 +74,22 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public long getTotalUserCount() {
 		return userRepository.count();
+	}
+
+	@Override
+	public User updateUserRole(Long userId, UserRole role) throws UserException {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new UserException("User not found with id: " + userId));
+		user.setRole(role);
+		return userRepository.save(user);
+	}
+
+	@Override
+	public User toggleUserVerification(Long userId) throws UserException {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new UserException("User not found with id: " + userId));
+		user.setVerified(!user.getVerified());
+		return userRepository.save(user);
 	}
 
 }

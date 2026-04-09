@@ -1,11 +1,14 @@
 package com.kylych.repository;
 
+import com.kylych.domain.PaymentStatus;
+import com.kylych.domain.PaymentType;
 import com.kylych.modal.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,6 +27,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Find all payments for a user
      */
     Page<Payment> findByUserIdAndActiveTrue(Long userId, Pageable pageable);
+
+    /**
+     * Find payments by user, type, and status (used to cancel orphaned payments)
+     */
+    List<Payment> findByUserIdAndPaymentTypeAndStatusIn(Long userId, PaymentType paymentType, List<PaymentStatus> statuses);
 
 
 

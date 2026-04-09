@@ -31,28 +31,28 @@ public class SecurityConfig {
 
 	@Autowired
 	private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-	
+
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-		return http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+		return http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.authorizeHttpRequests(Authorize -> Authorize
 						.requestMatchers("/api/**").authenticated()
 						.requestMatchers("/api/super-admin/**").hasRole("ADMIN")
 						.anyRequest().permitAll())
-			.oauth2Login(oauth2 -> oauth2
-					.userInfoEndpoint(userInfo -> userInfo
-							.userService(customOAuth2UserService))
-					.successHandler(oAuth2LoginSuccessHandler))
-			.addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
-			.csrf(AbstractHttpConfigurer::disable)
-			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			.exceptionHandling(
-					exceptionHandler -> exceptionHandler
-							.authenticationEntryPoint(customAuthenticationEntryPoint))
-			.build();
+				.oauth2Login(oauth2 -> oauth2
+						.userInfoEndpoint(userInfo -> userInfo
+								.userService(customOAuth2UserService))
+						.successHandler(oAuth2LoginSuccessHandler))
+				.addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
+				.csrf(AbstractHttpConfigurer::disable)
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.exceptionHandling(
+						exceptionHandler -> exceptionHandler
+								.authenticationEntryPoint(customAuthenticationEntryPoint))
+				.build();
 	}
-	
+
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
@@ -65,8 +65,9 @@ public class SecurityConfig {
 				CorsConfiguration cfg = new CorsConfiguration();
 				cfg.setAllowedOrigins(Arrays.asList(
 						"http://localhost:3000",
-						"http://localhost:5173"
-				));
+						"http://localhost:5173",
+						"http://localhost:5174"
+						));
 				cfg.setAllowedMethods(Collections.singletonList("*"));
 				cfg.setAllowCredentials(true);
 				cfg.setAllowedHeaders(Collections.singletonList("*"));

@@ -65,7 +65,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ReservationDTO createReservation(ReservationRequest reservationRequest)
-        throws ReservationException, BookException, UserException {
+            throws ReservationException, BookException, UserException {
         User user = getCurrentUser();
         return createReservationForUser(user.getId(), reservationRequest);
     }
@@ -75,7 +75,7 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationDTO createReservationForUser(
             Long userId,
             ReservationRequest reservationRequest)
-        throws ReservationException, BookException, UserException {
+            throws ReservationException, BookException, UserException {
 
         boolean alreadyHasLoan = bookLoanRepository
                 .existsByUserIdAndBookIdAndStatus(
@@ -89,11 +89,11 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 1. Validate user exists
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserException("User not found with ID: " + userId));
+                .orElseThrow(() -> new UserException("User not found with ID: " + userId));
 
         // 2. Validate book exists
         Book book = bookRepository.findById(reservationRequest.getBookId())
-            .orElseThrow(() -> new BookException("Book not found with ID: " + reservationRequest.getBookId()));
+                .orElseThrow(() -> new BookException("Book not found with ID: " + reservationRequest.getBookId()));
 
         if (!book.getActive()) {
             throw new BookException("Book is not active");
@@ -104,10 +104,8 @@ public class ReservationServiceImpl implements ReservationService {
             throw new ReservationException("You already have an active reservation for this book");
         }
 
-        // 4. Check if book is already available (has copies)
-        if (book.getAvailableCopies() > 0) {
-            throw new ReservationException("Book is currently available. Please check it out directly instead of reserving.");
-        }
+        // 4. Determine reservation status based on book availability
+        boolean bookIsAvailable = book.getAvailableCopies() > 0;
 
         // 5. Check user's active reservation limit
         long activeReservations = reservationRepository.countActiveReservationsByUser(userId);
@@ -119,20 +117,24 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setBook(book);
-        reservation.setStatus(ReservationStatus.PENDING);
+        reservation.setStatus(bookIsAvailable ? ReservationStatus.AVAILABLE : ReservationStatus.PENDING);
         reservation.setReservedAt(LocalDateTime.now());
+        if (bookIsAvailable) {
+            reservation.setAvailableAt(LocalDateTime.now());
+            reservation.setAvailableUntil(LocalDateTime.now().plusHours(HOLD_PERIOD_HOURS));
+        }
         reservation.setNotificationSent(false);
         reservation.setNotes(reservationRequest.getNotes());
 
         // Calculate queue position
         long pendingCount = reservationRepository
-        .countPendingReservationsByBook(book.getId());
+                .countPendingReservationsByBook(book.getId());
         reservation.setQueuePosition((int) (pendingCount + 1));
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
         logger.info("Reservation created for user {} and book {} (Queue position: {})",
-            userId, book.getId(), reservation.getQueuePosition());
+                userId, book.getId(), reservation.getQueuePosition());
 
         return reservationMapper.toDTO(savedReservation);
     }
@@ -141,7 +143,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public ReservationDTO cancelReservation(Long reservationId) throws ReservationException {
         Reservation reservation = reservationRepository.findById(reservationId)
-            .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
 
         // Verify current user owns this reservation (unless admin)
         User currentUser = getCurrentUser();
@@ -174,7 +176,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public ReservationDTO fulfillReservation(Long reservationId) throws ReservationException, BookException, UserException {
         Reservation reservation = reservationRepository.findById(reservationId)
-            .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
 
         if (reservation.getBook().getAvailableCopies()<=0) {
             throw new ReservationException("Reservation is not available for pickup (current status: " + reservation.getStatus() + ")");
@@ -200,7 +202,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional(readOnly = true)
     public ReservationDTO getReservationById(Long reservationId) throws ReservationException {
         Reservation reservation = reservationRepository.findById(reservationId)
-            .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
 
         return reservationMapper.toDTO(reservation);
     }
@@ -211,11 +213,11 @@ public class ReservationServiceImpl implements ReservationService {
         Pageable pageable = createPageable(searchRequest);
 
         Page<Reservation> reservationPage = reservationRepository.searchReservationsWithFilters(
-            searchRequest.getUserId(),
-            searchRequest.getBookId(),
-            searchRequest.getStatus(),
-            searchRequest.getActiveOnly() != null ? searchRequest.getActiveOnly() : false,
-            pageable
+                searchRequest.getUserId(),
+                searchRequest.getBookId(),
+                searchRequest.getStatus(),
+                searchRequest.getActiveOnly() != null ? searchRequest.getActiveOnly() : false,
+                pageable
         );
 
         return buildPageResponse(reservationPage);
@@ -233,7 +235,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional(readOnly = true)
     public int getQueuePosition(Long reservationId) throws ReservationException {
         Reservation reservation = reservationRepository.findById(reservationId)
-            .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new ReservationException("Reservation not found with ID: " + reservationId));
 
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             return 0; // Not in queue
@@ -323,8 +325,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     private PageResponse<ReservationDTO> buildPageResponse(Page<Reservation> reservationPage) {
         List<ReservationDTO> dtos = reservationPage.getContent().stream()
-            .map(reservationMapper::toDTO)
-            .toList();
+                .map(reservationMapper::toDTO)
+                .toList();
 
         PageResponse<ReservationDTO> response = new PageResponse<>();
         response.setContent(dtos);
@@ -353,11 +355,11 @@ public class ReservationServiceImpl implements ReservationService {
             String availableUntil = reservation.getAvailableUntil().format(DATE_FORMATTER);
 
             emailService.sendReservationAvailableNotification(
-                userEmail,
-                userName,
-                bookTitle,
-                availableUntil,
-                HOLD_PERIOD_HOURS
+                    userEmail,
+                    userName,
+                    bookTitle,
+                    availableUntil,
+                    HOLD_PERIOD_HOURS
             );
 
             reservation.setNotificationSent(true);

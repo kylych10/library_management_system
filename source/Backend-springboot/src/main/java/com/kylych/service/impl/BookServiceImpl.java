@@ -57,7 +57,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookMapper.toEntity(bookDTO);
 
         // Validate available copies
-        if(book.isAvailableCopiesValid()){
+        if(!book.isAvailableCopiesValid()){
             throw new BookException("Available copies cannot exceed total copies");
         }
 
@@ -76,8 +76,8 @@ public class BookServiceImpl implements BookService {
         for (BookDTO bookDTO : bookDTOs) {
             // Check for duplicate ISBNs in the input list
             long duplicateCount = bookDTOs.stream()
-                .filter(b -> b.getIsbn().equals(bookDTO.getIsbn()))
-                .count();
+                    .filter(b -> b.getIsbn().equals(bookDTO.getIsbn()))
+                    .count();
 
             if (duplicateCount > 1) {
                 throw new BookException("Duplicate ISBN in request: " + bookDTO.getIsbn());
@@ -112,8 +112,8 @@ public class BookServiceImpl implements BookService {
 
         // Convert to DTOs and return
         return savedBooks.stream()
-            .map(bookMapper::toDTO)
-            .collect(Collectors.toList());
+                .map(bookMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override

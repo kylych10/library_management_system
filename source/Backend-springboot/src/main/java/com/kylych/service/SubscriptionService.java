@@ -21,6 +21,11 @@ public interface SubscriptionService {
     PaymentInitiateResponse subscribe(SubscribeRequest request) throws SubscriptionException, UserException, PaymentException;
 
     /**
+     * Create and immediately activate a subscription without payment (dev/demo mode)
+     */
+    SubscriptionDTO subscribeFree(Long planId) throws SubscriptionException, UserException;
+
+    /**
      * Get active subscription for user
      */
     SubscriptionDTO getUsersActiveSubscription(Long userId) throws SubscriptionException, UserException;

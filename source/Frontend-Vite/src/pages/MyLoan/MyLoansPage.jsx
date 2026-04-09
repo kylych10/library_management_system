@@ -103,7 +103,7 @@ const MyLoansPage = () => {
     try {
       await dispatch(payFine(paymentDialog.loan.id)).unwrap();
       showSnackbar(
-        `Fine of ₹${paymentDialog.loan.fineAmount.toFixed(
+        `Fine of $${paymentDialog.loan.fineAmount.toFixed(
           2
         )} paid successfully!`,
         "success"

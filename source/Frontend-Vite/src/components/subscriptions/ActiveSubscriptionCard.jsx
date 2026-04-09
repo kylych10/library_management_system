@@ -59,11 +59,8 @@ const ActiveSubscriptionCard = ({ subscription, onRenew, onCancel, loading = fal
     });
   };
 
-  // Format currency
-  const formatPrice = (price, currency = 'INR') => {
-    if (currency === 'INR') {
-      return `₹${price}`;
-    }
+  // Format currency — price is always in cents, divide by 100 for display
+  const formatPrice = (price) => {
     return `$${(price / 100).toFixed(2)}`;
   };
 
@@ -140,7 +137,7 @@ const ActiveSubscriptionCard = ({ subscription, onRenew, onCancel, loading = fal
 
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-gray-900">
-              {formatPrice(subscription.price, subscription.currency)}
+              {formatPrice(subscription.price)}
             </span>
             <span className="text-sm text-gray-600">/ month</span>
           </div>

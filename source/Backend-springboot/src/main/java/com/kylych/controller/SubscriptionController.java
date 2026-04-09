@@ -62,6 +62,23 @@ public class SubscriptionController {
     }
 
     /**
+     * Subscribe to a plan immediately without payment (demo mode)
+     * POST /api/subscriptions/subscribe-free?planId={planId}
+     */
+    @PostMapping("/subscribe-free")
+    public ResponseEntity<?> subscribeFree(@RequestParam Long planId) {
+        try {
+            log.info("Free subscription request for plan: {}", planId);
+            SubscriptionDTO subscription = subscriptionService.subscribeFree(planId);
+            return ResponseEntity.ok(subscription);
+        } catch (SubscriptionException | UserException e) {
+            log.error("Free subscription failed", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), false));
+        }
+    }
+
+    /**
      * Get active and past subscriptions for current user
      * GET /api/subscriptions/my?page=0&size=10
      */

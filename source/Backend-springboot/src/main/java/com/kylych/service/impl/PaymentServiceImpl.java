@@ -279,31 +279,54 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public RevenueStatisticsResponse getMonthlyRevenue() {
-        List<Payment> payments=paymentRepository.findAll();
+        List<Payment> payments = paymentRepository.findAll();
 
         int currentYear = LocalDateTime.now().getYear();
         int currentMonth = LocalDateTime.now().getMonthValue();
 
-        // Filter only successful payments of this month
-        double totalRevenue = payments.stream()
+        // Last month (handle January → December of previous year)
+        int lastMonth = currentMonth == 1 ? 12 : currentMonth - 1;
+        int lastMonthYear = currentMonth == 1 ? currentYear - 1 : currentYear;
+
+        // Filter only successful payments of this month, divide by 100 (cents → dollars)
+        double thisMonthRevenue = payments.stream()
                 .filter(Payment::isSuccessful)
                 .filter(p -> p.getCreatedAt() != null &&
                         p.getCreatedAt().getYear() == currentYear &&
                         p.getCreatedAt().getMonthValue() == currentMonth)
-                .mapToDouble(p -> p.getAmount().doubleValue())
+                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0)
                 .sum();
 
-        // Determine currency (default to INR if mixed/null)
+        // Filter successful payments of last month, divide by 100
+        double lastMonthRevenue = payments.stream()
+                .filter(Payment::isSuccessful)
+                .filter(p -> p.getCreatedAt() != null &&
+                        p.getCreatedAt().getYear() == lastMonthYear &&
+                        p.getCreatedAt().getMonthValue() == lastMonth)
+                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0)
+                .sum();
+
+        // Calculate percentage change vs last month
+        double percentageChange = 0;
+        if (lastMonthRevenue > 0) {
+            percentageChange = ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100.0;
+        } else if (thisMonthRevenue > 0) {
+            percentageChange = 100.0; // new revenue this month, none last month
+        }
+
+        // Determine currency (default to USD)
         String currency = payments.stream()
                 .filter(Payment::isSuccessful)
                 .map(Payment::getCurrency)
                 .filter(Objects::nonNull)
                 .findFirst()
-                .orElse("INR");
+                .orElse("USD");
 
         // Build response
         RevenueStatisticsResponse response = new RevenueStatisticsResponse();
-        response.setMonthlyRevenue(totalRevenue);
+        response.setMonthlyRevenue(thisMonthRevenue);
+        response.setLastMonthRevenue(lastMonthRevenue);
+        response.setRevenuePercentageChange(percentageChange);
         response.setCurrency(currency);
         response.setYear(currentYear);
         response.setMonth(currentMonth);

@@ -121,10 +121,10 @@ export default function AdminSubscriptionPlansPage() {
       renderCell: (row) => (
         <Box>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {row.currency} {row.price.toFixed(2)}
+            ${(row.priceInMajorUnits ?? row.price / 100).toFixed(2)}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {row.price} paise
+            {row.price} cents
           </Typography>
         </Box>
       ),
@@ -266,7 +266,7 @@ export default function AdminSubscriptionPlansPage() {
               {allPlans?.length > 0
                 ? (
                     allPlans.reduce(
-                      (sum, p) => sum + ( p.price ),
+                      (sum, p) => sum + (p.priceInMajorUnits ?? p.price / 100),
                       0
                     ) / allPlans.length
                   ).toFixed(2)

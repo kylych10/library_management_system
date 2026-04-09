@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,9 +7,6 @@ import {
   Button,
   Typography,
   Divider,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Alert,
   Box,
   Chip,
@@ -40,17 +37,17 @@ const SubscribeDialog = ({
   currentSubscription = null,
   loading = false,
 }) => {
-  const [paymentGateway, setPaymentGateway] = useState('RAZORPAY');
+
+  const planPrice = plan?.priceInMajorUnits ?? (plan?.price / 100) ?? 0;
+  const currentPrice = currentSubscription?.priceInMajorUnits ?? (currentSubscription?.price / 100) ?? 0;
 
   // Determine if this is an upgrade
-  const isUpgrade = currentSubscription && plan?.price > currentSubscription.subscriptionPlan?.price;
-  const isDowngrade = currentSubscription && plan?.price < currentSubscription.subscriptionPlan?.price;
+  const isUpgrade = currentSubscription && planPrice > currentPrice;
+  const isDowngrade = currentSubscription && planPrice < currentPrice;
   const isSwitchPlan = currentSubscription && !isUpgrade && !isDowngrade;
 
   // Calculate price difference
-  const priceDifference = currentSubscription
-    ? Math.abs(plan?.price - currentSubscription.subscriptionPlan?.price)
-    : 0;
+  const priceDifference = currentSubscription ? Math.abs(planPrice - currentPrice) : 0;
 
 
 
@@ -67,10 +64,7 @@ const SubscribeDialog = ({
 
   const handleConfirm = () => {
     if (!plan) return;
-    onConfirm({
-      planId: plan.id,
-      paymentGateway,
-    });
+    onConfirm({ planId: plan.id });
   };
 
   const planColor = getPlanColor();
@@ -170,7 +164,7 @@ const SubscribeDialog = ({
           {/* Price */}
           <div className="flex items-baseline gap-2 mb-3">
             <Typography variant="h4" className="font-bold text-gray-900">
-              ${plan?.price?.toFixed(2)}
+              ${planPrice.toFixed(2)}
             </Typography>
             <Typography variant="body2" className="text-gray-600">
               / {plan?.duration === 365 ? 'year' : 'month'}
@@ -201,50 +195,6 @@ const SubscribeDialog = ({
           </div>
         </Box>
 
-        {/* Payment Gateway Selection */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" className="font-semibold text-gray-900 mb-2">
-            Select Payment Method:
-          </Typography>
-          <RadioGroup
-            value={paymentGateway}
-            onChange={(e) => setPaymentGateway(e.target.value)}
-          >
-            <FormControlLabel
-              value="RAZORPAY"
-              control={<Radio sx={{ color: planColor, '&.Mui-checked': { color: planColor } }} />}
-              label={
-                <div className="flex items-center gap-2">
-                  <Typography variant="body2">Razorpay</Typography>
-                  <Chip label="Recommended" size="small" color="success" />
-                </div>
-              }
-              sx={{
-                border: '1px solid #E5E7EB',
-                borderRadius: 1,
-                px: 2,
-                py: 1,
-                mb: 1,
-                mr: 0,
-                bgcolor: paymentGateway === 'RAZORPAY' ? `${planColor}05` : 'transparent',
-              }}
-            />
-            <FormControlLabel
-              value="STRIPE"
-              control={<Radio sx={{ color: planColor, '&.Mui-checked': { color: planColor } }} />}
-              label={<Typography variant="body2">Stripe</Typography>}
-              sx={{
-                border: '1px solid #E5E7EB',
-                borderRadius: 1,
-                px: 2,
-                py: 1,
-                mr: 0,
-                bgcolor: paymentGateway === 'STRIPE' ? `${planColor}05` : 'transparent',
-              }}
-            />
-          </RadioGroup>
-        </Box>
-
         {/* Current Plan Comparison */}
         {currentSubscription && (
           <>
@@ -256,11 +206,10 @@ const SubscribeDialog = ({
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                   <Typography variant="body2" className="font-semibold text-gray-900">
-                    {currentSubscription.subscriptionPlan?.name}
+                    {currentSubscription.planName}
                   </Typography>
                   <Typography variant="caption" className="text-gray-600">
-                    ${currentSubscription.subscriptionPlan?.price?.toFixed(2)} /{' '}
-                    {currentSubscription.subscriptionPlan?.duration === 365 ? 'year' : 'month'}
+                    ${currentPrice.toFixed(2)} / month
                   </Typography>
                 </div>
                 {isUpgrade && (
@@ -278,8 +227,7 @@ const SubscribeDialog = ({
         {/* Terms Notice */}
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="caption">
-            By subscribing, you agree to our Terms of Service. Your subscription will auto-renew
-            unless cancelled.
+            Your subscription will be activated instantly. You can cancel anytime from this page.
           </Typography>
         </Alert>
       </DialogContent>

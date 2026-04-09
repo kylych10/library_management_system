@@ -94,7 +94,7 @@ const MyFinesPage = () => {
     try {
       await dispatch(payFine({ fineId: paymentDialog.fine.id })).unwrap();
       showSnackbar(
-        `Fine of ₹${paymentDialog.fine.amountOutstanding.toFixed(
+        `Fine of $${paymentDialog.fine.amountOutstanding.toFixed(
           2
         )} paid successfully!`,
         "success"

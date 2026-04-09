@@ -28,6 +28,25 @@ export const subscribe = createAsyncThunk(
 );
 
 /**
+ * Subscribe to a plan immediately without payment (demo mode)
+ * POST /api/subscriptions/subscribe-free?planId={planId}
+ */
+export const subscribeFree = createAsyncThunk(
+  'subscriptions/subscribeFree',
+  async (planId, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`${API_URL}/subscribe-free`, null, {
+        params: { planId },
+        headers: getHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Subscription failed');
+    }
+  }
+);
+
+/**
  * Get active and past subscriptions for current user
  * GET /api/subscriptions/history?userId={userId}
  */

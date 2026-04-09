@@ -40,7 +40,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         }
 
         // Validate price is in smallest currency unit (paise/cents)
-        if (planDTO.getPrice() < 100) {
+        if (planDTO.getPrice() < 0) {
             throw new SubscriptionPlanException("Price must be at least 100 (smallest currency units)");
         }
 
@@ -70,7 +70,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         }
 
         // Validate price if being updated
-        if (planDTO.getPrice() != null && planDTO.getPrice() < 100) {
+        if (planDTO.getPrice() != null && planDTO.getPrice() < 0) {
             throw new SubscriptionPlanException("Price must be at least 100 (smallest currency units)");
         }
 

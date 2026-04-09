@@ -162,11 +162,10 @@ const CancelSubscriptionDialog = ({
             Current Plan
           </Typography>
           <Typography variant="h6" className="font-bold text-gray-900 mb-1">
-            {subscription?.subscriptionPlan?.name}
+            {subscription?.planName}
           </Typography>
           <Typography variant="body2" className="text-gray-600">
-            ${subscription?.subscriptionPlan?.price?.toFixed(2)} /{' '}
-            {subscription?.subscriptionPlan?.duration === 365 ? 'year' : 'month'}
+            ${(subscription?.priceInMajorUnits ?? (subscription?.price / 100))?.toFixed(2)} / month
           </Typography>
         </Box>
 

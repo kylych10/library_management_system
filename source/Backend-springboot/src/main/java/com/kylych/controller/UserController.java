@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,9 +27,9 @@ public class UserController {
 
 	private final UserService userService;
 
-	
 
-	
+
+
 	@GetMapping("/api/users/profile")
 	public ResponseEntity<UserDTO> getUserProfileFromJwtHandler(
 			@RequestHeader("Authorization") String jwt) throws UserException {
@@ -54,6 +56,32 @@ public class UserController {
 		UserDTO userDTO=UserMapper.toDTO(user);
 
 		return new ResponseEntity<>(userDTO,HttpStatus.OK);
+	}
+
+	/**
+	 * Update user role (Admin only)
+	 * PUT /api/users/{userId}/role?role=ROLE_ADMIN
+	 */
+	@PutMapping("/api/users/{userId}/role")
+	public ResponseEntity<UserDTO> updateUserRole(
+			@PathVariable Long userId,
+			@RequestParam String role
+	) throws UserException {
+		com.kylych.domain.UserRole userRole = com.kylych.domain.UserRole.valueOf(role);
+		User user = userService.updateUserRole(userId, userRole);
+		return ResponseEntity.ok(UserMapper.toDTO(user));
+	}
+
+	/**
+	 * Toggle user verified status (Admin only)
+	 * PUT /api/users/{userId}/toggle-verification
+	 */
+	@PutMapping("/api/users/{userId}/toggle-verification")
+	public ResponseEntity<UserDTO> toggleUserVerification(
+			@PathVariable Long userId
+	) throws UserException {
+		User user = userService.toggleUserVerification(userId);
+		return ResponseEntity.ok(UserMapper.toDTO(user));
 	}
 
 	/**
