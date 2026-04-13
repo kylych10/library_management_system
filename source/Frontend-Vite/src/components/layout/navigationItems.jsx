@@ -12,6 +12,7 @@ import {
   Search as SearchIcon,
   ChevronLeft as ChevronLeftIcon,
   Receipt as ReceiptIcon,
+  People as PeopleIcon,
 } from "@mui/icons-material";
 
 import React from "react";
@@ -76,5 +77,11 @@ export const navigationItems = [
     path: '/wishlist',
     icon: <FavoriteIcon />,
     description: 'Saved Books',
+  },
+  {
+    title: 'Friends',
+    path: '/friends',
+    icon: <PeopleIcon />,
+    description: 'Friends & Messages',
   },
 ];

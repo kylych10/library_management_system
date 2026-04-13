@@ -5,10 +5,10 @@ import com.kylych.domain.UserRole;
 import com.kylych.exception.UserException;
 import com.kylych.modal.User;
 import com.kylych.payload.dto.UserDTO;
+import com.kylych.payload.request.UpdateProfileRequest;
 
 import java.util.List;
 import java.util.Set;
-//import com.kylych.payload.request.UpdateUserDto;
 
 
 public interface UserService {
@@ -35,4 +35,9 @@ public interface UserService {
 	 * Toggle user verified status (Admin only)
 	 */
 	User toggleUserVerification(Long userId) throws UserException;
+
+	/**
+	 * Update current user's profile (fullName, phone, profileImage)
+	 */
+	User updateProfile(String jwt, UpdateProfileRequest request) throws UserException;
 }

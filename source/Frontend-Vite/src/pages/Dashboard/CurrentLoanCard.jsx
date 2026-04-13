@@ -1,77 +1,110 @@
-import { AccessTime, LibraryBooks } from "@mui/icons-material";
 import React from "react";
+import { Box, Typography, Chip, Button, alpha } from "@mui/material";
+import { AccessTime, LibraryBooks, Visibility } from "@mui/icons-material";
 import GetStatusChip from "./getStatusChip";
-import { Button, Chip } from "@mui/material";
 import { getDaysRemainingColor } from "./utils";
 import { useNavigate } from "react-router-dom";
 
 const CurrentLoanCard = ({ loan }) => {
   const navigate = useNavigate();
+
   return (
-    <div
-      key={loan.id}
-      className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "flex-start", sm: "center" },
+        justifyContent: "space-between",
+        gap: 1.5,
+        p: { xs: 1.5, sm: 2.5 },
+        border: "1px solid",
+        borderColor: loan.status === "OVERDUE" ? "rgba(239,68,68,0.3)" : "rgba(0,0,0,0.1)",
+        borderRadius: 2,
+        bgcolor: loan.status === "OVERDUE" ? "rgba(239,68,68,0.03)" : "white",
+        overflow: "hidden",
+        transition: "box-shadow 0.2s",
+        "&:hover": { boxShadow: "0 4px 16px rgba(0,0,0,0.1)" },
+      }}
     >
-      <div className="flex items-center space-x-4 flex-1">
+      {/* Left: cover + info */}
+      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, flex: 1, minWidth: 0 }}>
         {loan?.bookCoverImage ? (
-          <img
+          <Box
+            component="img"
             src={loan.bookCoverImage}
             alt={loan.bookTitle}
-            className="w-16 h-24 rounded-lg"
+            sx={{ width: 44, height: 64, borderRadius: 1, objectFit: "cover", flexShrink: 0 }}
           />
         ) : (
-          <div className="w-16 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
-            <LibraryBooks
-              sx={{
-                fontSize: 32,
-                color: "#4F46E5",
-                opacity: 0.3,
-              }}
-              z
-            />
-          </div>
+          <Box
+            sx={{
+              width: 44,
+              height: 64,
+              borderRadius: 1,
+              background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <LibraryBooks sx={{ fontSize: 22, color: "#4F46E5", opacity: 0.4 }} />
+          </Box>
         )}
 
-        <div className="flex-1">
-          <h4 className="text-lg font-semibold text-gray-900 mb-1">
+        <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <Typography
+            variant="subtitle2"
+            fontWeight={700}
+            sx={{ color: "#111827", mb: 0.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
             {loan.bookTitle}
-          </h4>
-          <p className="text-gray-600 mb-2">{loan.bookAuthor}</p>
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
+            {loan.bookAuthor}
+          </Typography>
 
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="flex items-center space-x-1 text-gray-600">
-              <AccessTime sx={{ fontSize: 16 }} />
-              <span>Due: {new Date(loan.dueDate).toLocaleDateString()}</span>
-            </div>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+            <AccessTime sx={{ fontSize: 13, color: "text.disabled", flexShrink: 0 }} />
+            <Typography variant="caption" color="text.secondary" noWrap>
+              Due: {new Date(loan.dueDate).toLocaleDateString()}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             <GetStatusChip status={loan.status} />
             <Chip
-              label={`${
-                loan.remainingDays > 0 ? loan.remainingDays : loan.overdueDays
-              } days ${loan.remainingDays >= 0 ? "remaining" : "overdue"}`}
+              label={`${loan.remainingDays > 0 ? loan.remainingDays : loan.overdueDays}d ${loan.remainingDays >= 0 ? "left" : "overdue"}`}
               color={getDaysRemainingColor(loan.remainingDays)}
               size="small"
               variant="outlined"
             />
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
 
-      <div className="flex items-center space-x-2">
-        <div>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => navigate(`/books/${loan?.bookId}`)}
-            sx={{ borderColor: "#4F46E5", color: "#4F46E5" }}
-          >
-            View
-          </Button>
-        </div>
-        {/* <Button variant="contained" size="small" sx={{ bgcolor: "#4F46E5" }}>
-          Renew
-        </Button> */}
-      </div>
-    </div>
+      {/* Right: action */}
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={<Visibility fontSize="small" />}
+        onClick={() => navigate(`/books/${loan?.bookId}`)}
+        sx={{
+          borderColor: "#4F46E5",
+          color: "#4F46E5",
+          textTransform: "none",
+          fontWeight: 600,
+          flexShrink: 0,
+          alignSelf: { xs: "flex-start", sm: "center" },
+          "&:hover": { bgcolor: "rgba(79,70,229,0.05)" },
+        }}
+      >
+        View
+      </Button>
+    </Box>
   );
 };
 

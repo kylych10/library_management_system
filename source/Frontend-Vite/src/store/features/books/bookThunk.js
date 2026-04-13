@@ -173,11 +173,13 @@ export const fetchBooks = createAsyncThunk(
                 activeOnly,
             };
 
-            // Only add optional filters if they are provided
+            // Only add optional filters if they are explicitly provided
             if (genreId !== null && genreId !== undefined) {
                 params.genreId = genreId;
             }
-            if (availableOnly !== null && availableOnly !== undefined) {
+            // availableOnly can be true (available), false (checked out), or null (all)
+            // Must include false explicitly — do NOT skip it
+            if (availableOnly === true || availableOnly === false) {
                 params.availableOnly = availableOnly;
             }
 

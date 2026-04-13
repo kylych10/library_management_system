@@ -216,15 +216,15 @@ const MyFineCard = ({ fine, handlePayFine }) => {
 
         {/* Amount Details Grid */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <InfoItem
               icon={<TrendingUp fontSize="small" />}
               label="Total Amount"
-              value={`$${parseFloat(fine.amount).toFixed(2)}`}
+              value={`$${parseFloat(fine.amount || 0).toFixed(2)}`}
               color="#1976d2"
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <InfoItem
               icon={<CheckCircle fontSize="small" />}
               label="Amount Paid"
@@ -233,7 +233,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
               highlight={fine.amountPaid > 0}
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <InfoItem
               icon={<Warning fontSize="small" />}
               label="Outstanding"
@@ -242,7 +242,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
               highlight={fine.amountOutstanding > 0}
             />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <InfoItem
               icon={<CalendarToday fontSize="small" />}
               label="Created Date"
@@ -264,14 +264,14 @@ const MyFineCard = ({ fine, handlePayFine }) => {
           {(fine.status === "PENDING" || fine.status === "PARTIALLY_PAID") && (
             <Button
               variant="contained"
-            
+              fullWidth
               size="large"
               startIcon={<Payment />}
               onClick={() => handlePayFine(fine)}
               sx={{
                 py: 1.8,
                 fontWeight: 700,
-                fontSize: "1rem",
+                fontSize: { xs: "0.9rem", sm: "1rem" },
                 borderRadius: 2,
                 background: "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)",
                 boxShadow: `0 4px 14px ${alpha("#DC2626", 0.4)}`,
@@ -286,7 +286,7 @@ const MyFineCard = ({ fine, handlePayFine }) => {
                 },
               }}
             >
-              Pay Outstanding Amount: ${parseFloat(fine.amountOutstanding).toFixed(2)}
+              Pay Outstanding Amount: ${parseFloat(fine.amountOutstanding || 0).toFixed(2)}
             </Button>
           )}
           {fine.status === "PAID" && (

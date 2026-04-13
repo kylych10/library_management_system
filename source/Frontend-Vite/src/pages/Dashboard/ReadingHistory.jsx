@@ -1,71 +1,97 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchMyBookLoans } from "../../store/features/bookLoans/bookLoanThunk";
-import { useEffect } from "react";
+import { Box, Typography, Grid } from "@mui/material";
 import { History } from "@mui/icons-material";
+import { fetchMyBookLoans } from "../../store/features/bookLoans/bookLoanThunk";
 
 const ReadingHistory = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { myLoans } = useSelector((state) => state.bookLoans);
 
-  const loadLoans = () => {
-    const status = "RETURNED";
-    dispatch(
-      fetchMyBookLoans({
-        status,
-        page: 0,
-        size: 20,
-      })
-    );
-  };
-
   useEffect(() => {
-    loadLoans();
+    dispatch(fetchMyBookLoans({ status: "RETURNED", page: 0, size: 20 }));
   }, []);
 
   return (
-    <div className="p-6">
-      <h3 className="text-2xl font-bold text-gray-900 mb-6">
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" fontWeight={700} color="#111827" sx={{ mb: 3 }}>
         Your Reading History
-      </h3>
+      </Typography>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {myLoans.map((history) => (
-          <div
-            key={history.id}
-            onClick={() => navigate(`/books/${history.bookId}`)}
-            className="group cursor-pointer bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all hover:-translate-y-1"
-          >
-           {history.bookCoverImage? <img src={history.bookCoverImage} alt={history.bookTitle} className="aspect-[3/4] rounded-lg mb-3" /> : <div className="aspect-[3/4] bg-gradient-to-br from-green-100 to-blue-100 rounded-lg mb-3 flex items-center justify-center">
-              <History sx={{ fontSize: 64, color: "#10B981", opacity: 0.3 }} />
-            </div>}
+      {myLoans.length === 0 ? (
+        <Box
+          sx={{
+            textAlign: "center",
+            py: { xs: 6, md: 8 },
+            border: "2px dashed rgba(0,0,0,0.1)",
+            borderRadius: 3,
+          }}
+        >
+          <History sx={{ fontSize: 56, color: "text.disabled", mb: 1.5 }} />
+          <Typography variant="body1" color="text.secondary">No reading history yet.</Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {myLoans.map((history) => (
+            <Grid key={history.id} size={{ xs: 6, sm: 4, md: 3 }}>
+              <Box
+                onClick={() => navigate(`/books/${history.bookId}`)}
+                sx={{
+                  cursor: "pointer",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  border: "1px solid rgba(0,0,0,0.08)",
+                  bgcolor: "white",
+                  transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  },
+                }}
+              >
+                {history.bookCoverImage ? (
+                  <Box
+                    component="img"
+                    src={history.bookCoverImage}
+                    alt={history.bookTitle}
+                    sx={{ width: "100%", aspectRatio: "3/4", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      aspectRatio: "3/4",
+                      background: "linear-gradient(135deg, #D1FAE5 0%, #DBEAFE 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <History sx={{ fontSize: 48, color: "#10B981", opacity: 0.3 }} />
+                  </Box>
+                )}
 
-            <h4 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors mb-1">
-              {history.bookTitle}
-            </h4>
-            <p className="text-sm text-gray-600 line-clamp-1 mb-2">
-              {history.bookAuthor}
-            </p>
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">
-                {new Date(history.returnDate).toLocaleDateString()}
-              </span>
-              <div className="flex items-center">
-                {[...Array(history.rating)].map((_, i) => (
-                  <span key={i} className="text-yellow-500">
-                    ★★★★★
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+                <Box sx={{ p: 1.5 }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ color: "#111827", mb: 0.25, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                    {history.bookTitle}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mb: 0.5 }}>
+                    {history.bookAuthor}
+                  </Typography>
+                  {history.returnDate && (
+                    <Typography variant="caption" color="text.disabled">
+                      Returned {new Date(history.returnDate).toLocaleDateString()}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
   );
 };
 

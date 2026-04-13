@@ -197,13 +197,15 @@ export default function AdminSubscriptionPlansPage() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 1.5, sm: 0 },
           mb: 3,
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
             Subscription Plans
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -216,6 +218,7 @@ export default function AdminSubscriptionPlansPage() {
           onClick={() => handleOpenDialog()}
           sx={{
             background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+            alignSelf: { xs: 'stretch', sm: 'auto' },
           }}
         >
           Add Plan
@@ -228,7 +231,7 @@ export default function AdminSubscriptionPlansPage() {
           <Paper sx={{ p: 2, textAlign: "center", bgcolor: "primary.lighter" }}>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 700, color: "primary.main" }}
+              sx={{ fontWeight: 700, color: "primary.main", fontSize: { xs: '1.3rem', sm: '2.125rem' } }}
             >
               {allPlans?.length || 0}
             </Typography>
@@ -239,7 +242,7 @@ export default function AdminSubscriptionPlansPage() {
           <Paper sx={{ p: 2, textAlign: "center", bgcolor: "success.lighter" }}>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 700, color: "success.main" }}
+              sx={{ fontWeight: 700, color: "success.main", fontSize: { xs: '1.3rem', sm: '2.125rem' } }}
             >
               {allPlans?.filter((p) => p.isActive).length || 0}
             </Typography>
@@ -250,7 +253,7 @@ export default function AdminSubscriptionPlansPage() {
           <Paper sx={{ p: 2, textAlign: "center", bgcolor: "warning.lighter" }}>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 700, color: "warning.main" }}
+              sx={{ fontWeight: 700, color: "warning.main", fontSize: { xs: '1.3rem', sm: '2.125rem' } }}
             >
               {allPlans?.filter((p) => p.isFeatured).length || 0}
             </Typography>
@@ -261,7 +264,7 @@ export default function AdminSubscriptionPlansPage() {
           <Paper sx={{ p: 2, textAlign: "center", bgcolor: "info.lighter" }}>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 700, color: "success.main" }}
+              sx={{ fontWeight: 700, color: "success.main", fontSize: { xs: '1.3rem', sm: '2.125rem' } }}
             >
               {allPlans?.length > 0
                 ? (

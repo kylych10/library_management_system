@@ -44,6 +44,7 @@ import Sidebar from "./UserSidebar";
 import UserSidebar from "./UserSidebar";
 import NotificationBell from "../notification/NotificationBell";
 import ThemeToggle from "../theme/ThemeToggle";
+import ChatAssistant from "../chat/ChatAssistant";
 
 const drawerWidth = 280;
 
@@ -140,7 +141,7 @@ export default function UserLayout() {
 
           <Tooltip title="Account">
             <IconButton onClick={handleProfileMenuOpen} sx={{ ml: 1 }}>
-              <Avatar src={user?.profilePicture} sx={{ width: 36, height: 36 }}>
+              <Avatar src={user?.profileImage} sx={{ width: 36, height: 36 }}>
                 {user?.fullName?.charAt(0)}
               </Avatar>
             </IconButton>
@@ -211,6 +212,9 @@ export default function UserLayout() {
           <Outlet />
         </Box>
       </Box>
+
+      {/* AI Chat Assistant */}
+      <ChatAssistant />
     </Box>
   );
 }

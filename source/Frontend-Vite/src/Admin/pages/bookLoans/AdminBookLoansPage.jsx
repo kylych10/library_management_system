@@ -18,15 +18,20 @@ import {
   Alert,
   Checkbox,
   FormControlLabel,
+  Divider,
+  Stack,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   FilterList as FilterIcon,
   CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  Cancel as CancelIcon,
   Edit as EditIcon,
   Warning as DamageIcon,
   RemoveCircle as LossIcon,
+  Close as CloseIcon,
+  AssignmentReturn as ReturnIcon,
+  Schedule as ExtendIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -39,37 +44,63 @@ import {
   getAllBookLoans,
   renewCheckout,
   updateBookLoan,
+  getCheckoutStatistics,
 } from "../../../store/features/bookLoans/bookLoanThunk";
 import { createFine } from "../../../store/features/fines/fineThunk";
 
+// ── Reusable confirm dialog ───────────────────────────────────────────────────
+function ConfirmDialog({ open, title, message, onConfirm, onCancel, severity = "warning" }) {
+  return (
+    <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {title}
+        <IconButton size="small" onClick={onCancel}><CloseIcon fontSize="small" /></IconButton>
+      </DialogTitle>
+      <DialogContent>
+        <Alert severity={severity} sx={{ mt: 1 }}>{message}</Alert>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onCancel} variant="outlined">Cancel</Button>
+        <Button
+          onClick={onConfirm}
+          variant="contained"
+          color={severity === "error" ? "error" : severity === "success" ? "success" : "warning"}
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function AdminBookLoansPage() {
   const dispatch = useDispatch();
-  const { allLoans, loading, totalElements, totalPages, currentPage } =
+  const { allLoans, loading, totalElements, statistics } =
     useSelector((state) => state.bookLoans);
 
-  // Basic filters
-  const [searchQuery, setSearchQuery] = useState("");
+  // ── Filter state ────────────────────────────────────────────────────────────
   const [filterStatus, setFilterStatus] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
-
-  // Advanced filters
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [userId, setUserId] = useState("");
   const [bookId, setBookId] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
-  const [unpaidFinesOnly, setUnpaidFinesOnly] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("DESC");
 
-  // Dialog state
+  // ── Extend dialog ───────────────────────────────────────────────────────────
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [extensionDays, setExtensionDays] = useState(7);
 
-  // Edit dialog state
+  // ── Return confirm dialog ───────────────────────────────────────────────────
+  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
+  const [returnTarget, setReturnTarget] = useState(null);
+
+  // ── Edit dialog ─────────────────────────────────────────────────────────────
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     status: "",
@@ -81,106 +112,73 @@ export default function AdminBookLoansPage() {
     notes: "",
   });
 
-  // Create fine dialog state
+  // ── Create fine dialog ──────────────────────────────────────────────────────
   const [createFineDialogOpen, setCreateFineDialogOpen] = useState(false);
-  const [fineType, setFineType] = useState(""); // "DAMAGE" or "LOSS"
+  const [fineType, setFineType] = useState("");
   const [createFineFormData, setCreateFineFormData] = useState({
     amount: "",
     reason: "",
     notes: "",
   });
 
-  useEffect(() => {
-    loadLoans();
-  }, [
-    page,
-    rowsPerPage,
-    filterStatus,
-    overdueOnly,
-    unpaidFinesOnly,
-    sortBy,
-    sortDirection,
-  ]);
+  // ── Action feedback dialog ──────────────────────────────────────────────────
+  const [feedbackDialog, setFeedbackDialog] = useState({ open: false, message: "", severity: "success" });
+  const showFeedback = (message, severity = "success") => setFeedbackDialog({ open: true, message, severity });
+
+  // ── Load on mount & filter change ──────────────────────────────────────────
+  useEffect(() => { dispatch(getCheckoutStatistics()); }, []);
+  useEffect(() => { loadLoans(); }, [page, rowsPerPage, filterStatus, overdueOnly, sortBy, sortDirection]);
 
   const loadLoans = () => {
-    const searchRequest = {
-      page,
-      size: rowsPerPage,
-      sortBy,
-      sortDirection,
-    };
-
-    // Only add filters if they have values
-    if (userId) searchRequest.userId = parseInt(userId);
-    if (bookId) searchRequest.bookId = parseInt(bookId);
-    if (filterStatus) searchRequest.status = filterStatus;
-    if (overdueOnly) searchRequest.overdueOnly = overdueOnly;
-    if (unpaidFinesOnly) searchRequest.unpaidFinesOnly = unpaidFinesOnly;
-    if (startDate)
-      searchRequest.startDate = dayjs(startDate).format("YYYY-MM-DD");
-    if (endDate) searchRequest.endDate = dayjs(endDate).format("YYYY-MM-DD");
-
-    dispatch(getAllBookLoans(searchRequest));
+    const req = { page, size: rowsPerPage, sortBy, sortDirection };
+    if (userId) req.userId = parseInt(userId);
+    if (bookId) req.bookId = parseInt(bookId);
+    if (filterStatus) req.status = filterStatus;
+    if (overdueOnly) req.overdueOnly = true;
+    if (startDate) req.startDate = dayjs(startDate).format("YYYY-MM-DD");
+    if (endDate) req.endDate = dayjs(endDate).format("YYYY-MM-DD");
+    dispatch(getAllBookLoans(req));
   };
 
-  const handleApplyFilters = () => {
-    setPage(0); // Reset to first page when applying filters
-    loadLoans();
-  };
+  const refreshAll = () => { loadLoans(); dispatch(getCheckoutStatistics()); };
 
-  const handleReturn = async (loan) => {
-    if (window.confirm(`Mark loan #${loan.id} as returned?`)) {
-      try {
-        await dispatch(checkinBook({ bookLoanId: loan.id })).unwrap();
-        loadLoans();
-      } catch (error) {
-        console.error("Error returning book:", error);
-      }
+  // ── Return ──────────────────────────────────────────────────────────────────
+  const handleOpenReturn = (loan) => { setReturnTarget(loan); setReturnConfirmOpen(true); };
+  const handleConfirmReturn = async () => {
+    setReturnConfirmOpen(false);
+    try {
+      await dispatch(checkinBook({ bookLoanId: returnTarget.id })).unwrap();
+      showFeedback(`Loan #${returnTarget.id} marked as returned.`, "success");
+      refreshAll();
+    } catch (err) {
+      showFeedback(err || "Failed to return book.", "error");
     }
+    setReturnTarget(null);
   };
 
-  const handleOpenExtendDialog = (loan) => {
-    setSelectedLoan(loan);
-    setExtensionDays(7);
-    setExtendDialogOpen(true);
-  };
-
+  // ── Extend ──────────────────────────────────────────────────────────────────
+  const handleOpenExtend = (loan) => { setSelectedLoan(loan); setExtensionDays(7); setExtendDialogOpen(true); };
   const handleExtend = async () => {
     try {
-      await dispatch(
-        renewCheckout({
-          bookLoanId: selectedLoan.id,
-          extensionDays: extensionDays,
-        })
-      ).unwrap();
+      await dispatch(renewCheckout({ bookLoanId: selectedLoan.id, extensionDays })).unwrap();
       setExtendDialogOpen(false);
-      loadLoans();
-    } catch (error) {
-      console.error("Error extending loan:", error);
-      alert(error || "Failed to extend loan");
+      showFeedback(`Loan #${selectedLoan.id} extended by ${extensionDays} days.`, "success");
+      refreshAll();
+    } catch (err) {
+      showFeedback(err || "Failed to extend loan.", "error");
     }
   };
 
-  const handleCancel = async (loan) => {
-    if (window.confirm(`Cancel loan #${loan.id}?`)) {
-      try {
-        // await dispatch(cancelLoan(loan.id)).unwrap();
-        loadLoans();
-      } catch (error) {
-        console.error("Error cancelling loan:", error);
-      }
-    }
-  };
-
-  const handleOpenEditDialog = (loan) => {
+  // ── Edit ────────────────────────────────────────────────────────────────────
+  const handleOpenEdit = (loan) => {
     setSelectedLoan(loan);
     setEditFormData({
       status: loan.status || "",
       dueDate: loan.dueDate ? dayjs(loan.dueDate) : null,
       returnDate: loan.returnDate ? dayjs(loan.returnDate) : null,
-      maxRenewals: loan.maxRenewals || "",
-      fineAmount: loan.fineAmount || "",
-      finePaid: loan.finePaid || false,
+      maxRenewals: loan.maxRenewals != null ? String(loan.maxRenewals) : "",
+      fineAmount: loan.fineAmount != null ? String(loan.fineAmount) : "",
+      finePaid: loan.finePaid === true,
       notes: "",
     });
     setEditDialogOpen(true);
@@ -188,33 +186,25 @@ export default function AdminBookLoansPage() {
 
   const handleUpdateLoan = async () => {
     try {
-      const updateRequest = {};
-
-      // Only include fields that have values
-      if (editFormData.status) updateRequest.status = editFormData.status;
-      if (editFormData.dueDate) updateRequest.dueDate = dayjs(editFormData.dueDate).format("YYYY-MM-DD");
-      if (editFormData.returnDate) updateRequest.returnDate = dayjs(editFormData.returnDate).format("YYYY-MM-DD");
-      if (editFormData.maxRenewals) updateRequest.maxRenewals = parseInt(editFormData.maxRenewals);
-      if (editFormData.fineAmount) updateRequest.fineAmount = parseFloat(editFormData.fineAmount);
-      updateRequest.finePaid = editFormData.finePaid;
-      if (editFormData.notes) updateRequest.notes = editFormData.notes;
-
-      await dispatch(
-        updateBookLoan({
-          bookLoanId: selectedLoan.id,
-          updateRequest,
-        })
-      ).unwrap();
-
+      const req = {};
+      if (editFormData.status) req.status = editFormData.status;
+      if (editFormData.dueDate) req.dueDate = dayjs(editFormData.dueDate).format("YYYY-MM-DD");
+      if (editFormData.returnDate) req.returnDate = dayjs(editFormData.returnDate).format("YYYY-MM-DD");
+      if (editFormData.maxRenewals) req.maxRenewals = parseInt(editFormData.maxRenewals);
+      if (editFormData.fineAmount) req.fineAmount = parseFloat(editFormData.fineAmount);
+      req.finePaid = editFormData.finePaid;
+      if (editFormData.notes) req.notes = editFormData.notes;
+      await dispatch(updateBookLoan({ bookLoanId: selectedLoan.id, updateRequest: req })).unwrap();
       setEditDialogOpen(false);
-      loadLoans();
-    } catch (error) {
-      console.error("Error updating loan:", error);
-      alert(error || "Failed to update loan");
+      showFeedback(`Loan #${selectedLoan.id} updated successfully.`, "success");
+      refreshAll();
+    } catch (err) {
+      showFeedback(err || "Failed to update loan.", "error");
     }
   };
 
-  const handleOpenCreateFineDialog = (loan, type) => {
+  // ── Create fine ─────────────────────────────────────────────────────────────
+  const handleOpenCreateFine = (loan, type) => {
     setSelectedLoan(loan);
     setFineType(type);
     setCreateFineFormData({
@@ -226,437 +216,201 @@ export default function AdminBookLoansPage() {
   };
 
   const handleCreateFine = async () => {
-    if (!createFineFormData.amount) {
-      alert("Please enter a fine amount");
-      return;
-    }
-
+    if (!createFineFormData.amount) { showFeedback("Please enter a fine amount.", "error"); return; }
     try {
-      // Create the fine
-      await dispatch(
-        createFine({
-          bookLoanId: selectedLoan.id,
-          type: fineType,
-          amount: parseFloat(createFineFormData.amount),
-          reason: createFineFormData.reason,
-          notes: createFineFormData.notes,
-        })
-      ).unwrap();
-
-      // Update the book loan status to DAMAGED or LOST
-      await dispatch(
-        updateBookLoan({
-          bookLoanId: selectedLoan.id,
-          updateRequest: {
-            status: fineType === "DAMAGE" ? "DAMAGED" : "LOST",
-          },
-        })
-      ).unwrap();
-
+      await dispatch(createFine({
+        bookLoanId: selectedLoan.id,
+        type: fineType,
+        amount: Math.round(parseFloat(createFineFormData.amount)),
+        reason: createFineFormData.reason,
+        notes: createFineFormData.notes,
+      })).unwrap();
+      await dispatch(updateBookLoan({
+        bookLoanId: selectedLoan.id,
+        updateRequest: { status: fineType === "DAMAGE" ? "DAMAGED" : "LOST" },
+      })).unwrap();
       setCreateFineDialogOpen(false);
-      loadLoans();
-    } catch (error) {
-      console.error("Error creating fine:", error);
-      alert(error || "Failed to create fine");
+      showFeedback(`${fineType === "DAMAGE" ? "Damage" : "Loss"} fine created for Loan #${selectedLoan.id}.`, "success");
+      refreshAll();
+    } catch (err) {
+      showFeedback(err || "Failed to create fine.", "error");
     }
   };
 
+  // ── Status chip ─────────────────────────────────────────────────────────────
   const getStatusChip = (status) => {
-    const statusMap = {
-      CHECKED_OUT: { color: "success", label: "CHECKED_OUT" },
-      OVERDUE: { color: "error", label: "Overdue" },
-      RETURNED: { color: "default", label: "Returned" },
-      CANCELLED: { color: "warning", label: "Cancelled" },
+    const map = {
+      CHECKED_OUT: { color: "success", label: "Checked Out" },
+      OVERDUE:     { color: "error",   label: "Overdue" },
+      RETURNED:    { color: "default", label: "Returned" },
+      LOST:        { color: "secondary", label: "Lost" },
+      DAMAGED:     { color: "warning", label: "Damaged" },
     };
-    const config = statusMap[status] || { color: "default", label: status };
-    return <Chip label={config.label} color={config.color} size="small" />;
+    const cfg = map[status] || { color: "default", label: status };
+    return <Chip label={cfg.label} color={cfg.color} size="small" sx={{ fontWeight: 600 }} />;
   };
 
-  const calculateDaysOverdue = (dueDate, status) => {
-    if (status !== "OVERDUE") return null;
-    const due = new Date(dueDate);
-    const today = new Date();
-    const diffTime = Math.abs(today - due);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
+  // ── Table columns ───────────────────────────────────────────────────────────
   const columns = [
+    { field: "id", headerName: "ID", minWidth: 60 },
     {
-      field: "id",
-      headerName: "Loan ID",
-      minWidth: 80,
-    },
-    {
-      field: "bookTitle",
-      headerName: "Book",
-      minWidth: 200,
+      field: "bookTitle", headerName: "Book", minWidth: 180,
       renderCell: (row) => (
         <Box>
-          <Typography variant="body2">{row.bookTitle}</Typography>
-          {row.bookAuthor && (
-            <Typography variant="caption" color="text.secondary">
-              by {row.bookAuthor}
-            </Typography>
+          <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 200 }}>{row.bookTitle}</Typography>
+          {row.bookAuthor && <Typography variant="caption" color="text.secondary">by {row.bookAuthor}</Typography>}
+        </Box>
+      ),
+    },
+    {
+      field: "userName", headerName: "User", minWidth: 150,
+      renderCell: (row) => (
+        <Box>
+          <Typography variant="body2" fontWeight={600}>{row.userName}</Typography>
+          {row.userEmail && <Typography variant="caption" color="text.secondary">{row.userEmail}</Typography>}
+        </Box>
+      ),
+    },
+    {
+      field: "checkoutDate", headerName: "Checkout",
+      renderCell: (row) => (
+        <Typography variant="body2">
+          {row.checkoutDate ? new Date(row.checkoutDate).toLocaleDateString() : "—"}
+        </Typography>
+      ),
+    },
+    {
+      field: "dueDate", headerName: "Due Date",
+      renderCell: (row) => (
+        <Box>
+          <Typography variant="body2" color={row.status === "OVERDUE" ? "error.main" : "text.primary"}>
+            {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "—"}
+          </Typography>
+          {row.status === "OVERDUE" && row.overdueDays > 0 && (
+            <Typography variant="caption" color="error">{row.overdueDays}d overdue</Typography>
           )}
         </Box>
       ),
     },
     {
-      field: "userName",
-      headerName: "User",
-      minWidth: 150,
+      field: "returnDate", headerName: "Returned",
       renderCell: (row) => (
+        <Typography variant="body2">
+          {row.returnDate ? new Date(row.returnDate).toLocaleDateString() : "—"}
+        </Typography>
+      ),
+    },
+    { field: "status", headerName: "Status", renderCell: (row) => getStatusChip(row.status) },
+    {
+      field: "fineAmount", headerName: "Fine",
+      renderCell: (row) => row.fineAmount > 0 ? (
         <Box>
-          <Typography variant="body2">{row.userName}</Typography>
-          {row.userEmail && (
-            <Typography variant="caption" color="text.secondary">
-              {row.userEmail}
-            </Typography>
-          )}
+          <Typography variant="body2" fontWeight={600} color={row.finePaid ? "success.main" : "error.main"}>
+            ${parseFloat(row.fineAmount).toFixed(2)}
+          </Typography>
+          <Typography variant="caption" color={row.finePaid ? "success.main" : "error.main"}>
+            {row.finePaid ? "Paid" : "Unpaid"}
+          </Typography>
         </Box>
-      ),
+      ) : <Typography variant="body2" color="text.disabled">—</Typography>,
     },
-    {
-      field: "checkoutDate",
-      headerName: "Checkout Date",
-      renderCell: (row) => (
-        <Typography variant="body2">
-          {row.checkoutDate
-            ? new Date(row.checkoutDate).toLocaleDateString()
-            : "-"}
-        </Typography>
-      ),
-    },
-    {
-      field: "dueDate",
-      headerName: "Due Date",
-      renderCell: (row) => {
-        return (
-          <Box>
-            <Typography variant="body2">
-              {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
-            </Typography>
-            {row.isOverdue && row.overdueDays && (
-              <Typography variant="caption" color="error">
-                {row.overdueDays} days overdue
-              </Typography>
-            )}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "returnDate",
-      headerName: "Return Date",
-      renderCell: (row) => (
-        <Typography variant="body2">
-          {row.returnDate ? new Date(row.returnDate).toLocaleDateString() : "-"}
-        </Typography>
-      ),
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      renderCell: (row) => getStatusChip(row.status),
-    },
-    
   ];
 
+  // ── Row actions ─────────────────────────────────────────────────────────────
   const customActions = (row) => (
-    <Box sx={{width:"120px", display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-  
-     
+    <Stack direction="column" spacing={0.5} sx={{ minWidth: 110 }}>
       {(row.status === "CHECKED_OUT" || row.status === "OVERDUE") && (
         <>
-        <Button
-        fullWidth
-            size="small"
-            variant="contained"
-            color="success"
-            startIcon={<CheckCircleIcon />}
-            onClick={() => handleReturn(row)}
-          >
+          <Button fullWidth size="small" variant="contained" color="success"
+            startIcon={<ReturnIcon />} onClick={() => handleOpenReturn(row)}
+            sx={{ textTransform: "none", fontSize: "0.75rem" }}>
             Return
           </Button>
-          <Button
-          fullWidth
-            size="small"
-            variant="outlined"
-            color="warning"
-            startIcon={<DamageIcon />}
-            onClick={() => handleOpenCreateFineDialog(row, "DAMAGE")}
-          >
+          <Button fullWidth size="small" variant="outlined" color="warning"
+            startIcon={<DamageIcon />} onClick={() => handleOpenCreateFine(row, "DAMAGE")}
+            sx={{ textTransform: "none", fontSize: "0.75rem" }}>
             Damage
           </Button>
-          <Button
-          fullWidth
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<LossIcon />}
-            onClick={() => handleOpenCreateFineDialog(row, "LOSS")}
-          >
+          <Button fullWidth size="small" variant="outlined" color="error"
+            startIcon={<LossIcon />} onClick={() => handleOpenCreateFine(row, "LOSS")}
+            sx={{ textTransform: "none", fontSize: "0.75rem" }}>
             Loss
           </Button>
         </>
       )}
-      <Button
-        size="small"
-        variant="outlined"
-        color="info"
-        startIcon={<EditIcon />}
-        onClick={() => handleOpenEditDialog(row)}
-        fullWidth
-      >
+      {row.status === "CHECKED_OUT" && (
+        <Button fullWidth size="small" variant="outlined" color="info"
+          startIcon={<ExtendIcon />} onClick={() => handleOpenExtend(row)}
+          sx={{ textTransform: "none", fontSize: "0.75rem" }}>
+          Extend
+        </Button>
+      )}
+      <Button fullWidth size="small" variant="outlined"
+        startIcon={<EditIcon />} onClick={() => handleOpenEdit(row)}
+        sx={{ textTransform: "none", fontSize: "0.75rem" }}>
         Edit
       </Button>
-    </Box>
+    </Stack>
   );
+
+  const statCards = [
+    { label: "Active Loans",    value: statistics?.activeCheckouts ?? 0, color: "success" },
+    { label: "Overdue",         value: statistics?.overdueCheckouts ?? 0, color: "error" },
+    { label: "Returned",        value: statistics?.totalReturns ?? 0,    color: "info" },
+    { label: "Unpaid Fines",    value: `$${parseFloat(statistics?.totalUnpaidFines ?? 0).toFixed(2)}`, color: "warning" },
+  ];
+
+  const colorMap = {
+    success: { bg: "success.lighter", text: "success.main" },
+    error:   { bg: "error.lighter",   text: "error.main" },
+    info:    { bg: "info.lighter",    text: "info.main" },
+    warning: { bg: "warning.lighter", text: "warning.main" },
+  };
 
   return (
     <Box>
-      {/* Page Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            Book Loans Management
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Monitor and manage all book loans
-          </Typography>
-        </Box>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" fontWeight={700} sx={{ fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>Book Loans Management</Typography>
+        <Typography variant="body2" color="text.secondary">Monitor and manage all book loans</Typography>
       </Box>
 
-      {/* Stats Summary */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: "center", bgcolor: "success.lighter" }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, color: "success.main" }}
-            >
-              {allLoans?.filter((l) => l.status === "CHECKED_OUT").length || 0}
-            </Typography>
-            <Typography variant="body2">Active Loans</Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: "center", bgcolor: "error.lighter" }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, color: "error.main" }}
-            >
-              {allLoans?.filter((l) => l.status === "OVERDUE" || l.isOverdue)
-                .length || 0}
-            </Typography>
-            <Typography variant="body2">Overdue Loans</Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: "center", bgcolor: "info.lighter" }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, color: "info.main" }}
-            >
-              {allLoans?.filter((l) => l.status === "RETURNED").length || 0}
-            </Typography>
-            <Typography variant="body2">Returned</Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: "center", bgcolor: "warning.lighter" }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, color: "warning.main" }}
-            >
-              $
-              {allLoans
-                ?.reduce((sum, l) => sum + (parseFloat(l.fineAmount) || 0), 0)
-                .toFixed(2) || "0.00"}
-            </Typography>
-            <Typography variant="body2">Total Fines</Typography>
-          </Paper>
-        </Grid>
+      {/* Stats */}
+      <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: 3 }}>
+        {statCards.map((s) => (
+          <Grid key={s.label} size={{ xs: 6, sm: 6, md: 3 }}>
+            <Paper sx={{ p: { xs: 1.5, sm: 2 }, textAlign: "center", bgcolor: colorMap[s.color].bg, borderRadius: 2,
+              transition: "box-shadow 0.2s", "&:hover": { boxShadow: 4 } }}>
+              <Typography fontWeight={700} color={colorMap[s.color].text} sx={{ fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>{s.value}</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{s.label}</Typography>
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
 
-      {/* Filter and Sort Controls */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          gap: 2,
-          mb: 3,
-        }}
-      >
-        <FormControl sx={{ minWidth: 200 }}>
+      {/* Toolbar */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3, alignItems: "center", justifyContent: "flex-end" }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Sort By</InputLabel>
-          <Select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            label="Sort By"
-          >
+          <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} label="Sort By">
             <MenuItem value="createdAt">Created Date</MenuItem>
-            <MenuItem value="loanDate">Loan Date</MenuItem>
             <MenuItem value="dueDate">Due Date</MenuItem>
             <MenuItem value="returnDate">Return Date</MenuItem>
           </Select>
         </FormControl>
-
-        <FormControl sx={{ minWidth: 150 }}>
-          <InputLabel>Sort Direction</InputLabel>
-          <Select
-            value={sortDirection}
-            onChange={(e) => setSortDirection(e.target.value)}
-            label="Sort Direction"
-          >
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Direction</InputLabel>
+          <Select value={sortDirection} onChange={(e) => setSortDirection(e.target.value)} label="Direction">
             <MenuItem value="ASC">Ascending</MenuItem>
             <MenuItem value="DESC">Descending</MenuItem>
           </Select>
         </FormControl>
-
-        <Button
-          variant="outlined"
-          startIcon={<FilterIcon />}
-          onClick={() => setFilterModalOpen(true)}
-          sx={{ height: 56 }}
-        >
+        <Button variant="outlined" startIcon={<FilterIcon />} onClick={() => setFilterModalOpen(true)}>
           Filters
         </Button>
       </Box>
 
-      {/* Filter Modal */}
-      <Dialog
-        open={filterModalOpen}
-        onClose={() => setFilterModalOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Filter Book Loans</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Status</InputLabel>
-                <Select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  label="Filter by Status"
-                >
-                  <MenuItem value="">All Status</MenuItem>
-                  <MenuItem value="CHECKED_OUT">Active</MenuItem>
-                  <MenuItem value="OVERDUE">Overdue</MenuItem>
-                  <MenuItem value="RETURNED">Returned</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="User ID"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                type="number"
-                placeholder="Filter by user ID"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Book ID"
-                value={bookId}
-                onChange={(e) => setBookId(e.target.value)}
-                type="number"
-                placeholder="Filter by book ID"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Start Date"
-                  value={startDate}
-                  onChange={(newValue) => setStartDate(newValue)}
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
-              </LocalizationProvider>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="End Date"
-                  value={endDate}
-                  onChange={(newValue) => setEndDate(newValue)}
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
-              </LocalizationProvider>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={overdueOnly}
-                    onChange={(e) => setOverdueOnly(e.target.checked)}
-                  />
-                }
-                label="Overdue Only"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={unpaidFinesOnly}
-                    onChange={(e) => setUnpaidFinesOnly(e.target.checked)}
-                  />
-                }
-                label="Unpaid Fines Only"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setFilterStatus("");
-              setUserId("");
-              setBookId("");
-              setOverdueOnly(false);
-              setUnpaidFinesOnly(false);
-              setStartDate(null);
-              setEndDate(null);
-            }}
-            startIcon={<FilterIcon />}
-          >
-            Clear Filters
-          </Button>
-          <Button onClick={() => setFilterModalOpen(false)}>Cancel</Button>
-          <Button
-            onClick={() => {
-              handleApplyFilters();
-              setFilterModalOpen(false);
-            }}
-            variant="contained"
-          >
-            Apply Filters
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Data Table */}
+      {/* Table */}
       <DataTable
         columns={columns}
         data={allLoans || []}
@@ -664,89 +418,25 @@ export default function AdminBookLoansPage() {
         page={page}
         rowsPerPage={rowsPerPage}
         totalRows={totalElements || 0}
-        onPageChange={(event, newPage) => setPage(newPage)}
-        onRowsPerPageChange={(event) => {
-          setRowsPerPage(parseInt(event.target.value, 10));
-          setPage(0);
-        }}
+        onPageChange={(_, newPage) => setPage(newPage)}
+        onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
         customActions={customActions}
       />
 
-      {/* Extend Loan Dialog */}
-      <Dialog
-        open={extendDialogOpen}
-        onClose={() => setExtendDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Extend Loan Period</DialogTitle>
+      {/* ── Filter Modal ─────────────────────────────────────────────────────── */}
+      <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Filter Book Loans
+          <IconButton size="small" onClick={() => setFilterModalOpen(false)}><CloseIcon fontSize="small" /></IconButton>
+        </DialogTitle>
+        <Divider />
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Extend the loan period for:{" "}
-            <strong>{selectedLoan?.bookTitle}</strong>
-          </Alert>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Extension Period</InputLabel>
-            <Select
-              value={extensionDays}
-              onChange={(e) => setExtensionDays(e.target.value)}
-              label="Extension Period"
-            >
-              <MenuItem value={3}>3 Days</MenuItem>
-              <MenuItem value={7}>7 Days</MenuItem>
-              <MenuItem value={14}>14 Days</MenuItem>
-              <MenuItem value={30}>30 Days</MenuItem>
-            </Select>
-          </FormControl>
-          {selectedLoan && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Current Due Date:{" "}
-                {new Date(selectedLoan.dueDate).toLocaleDateString()}
-              </Typography>
-              <Typography variant="body2" color="primary">
-                New Due Date:{" "}
-                {new Date(
-                  new Date(selectedLoan.dueDate).getTime() +
-                    extensionDays * 24 * 60 * 60 * 1000
-                ).toLocaleDateString()}
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setExtendDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleExtend} variant="contained">
-            Extend Loan
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Loan Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Edit Book Loan #{selectedLoan?.id}</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2, mt: 1 }}>
-            Editing loan for: <strong>{selectedLoan?.bookTitle}</strong> by{" "}
-            <strong>{selectedLoan?.userName}</strong>
-          </Alert>
-
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
                 <InputLabel>Status</InputLabel>
-                <Select
-                  value={editFormData.status}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, status: e.target.value })
-                  }
-                  label="Status"
-                >
+                <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} label="Status">
+                  <MenuItem value="">All</MenuItem>
                   <MenuItem value="CHECKED_OUT">Checked Out</MenuItem>
                   <MenuItem value="OVERDUE">Overdue</MenuItem>
                   <MenuItem value="RETURNED">Returned</MenuItem>
@@ -755,201 +445,214 @@ export default function AdminBookLoansPage() {
                 </Select>
               </FormControl>
             </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Max Renewals"
-                type="number"
-                value={editFormData.maxRenewals}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    maxRenewals: e.target.value,
-                  })
-                }
-              />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth size="small" label="User ID" value={userId}
+                onChange={(e) => setUserId(e.target.value)} type="number" />
             </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth size="small" label="Book ID" value={bookId}
+                onChange={(e) => setBookId(e.target.value)} type="number" />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControlLabel control={<Checkbox checked={overdueOnly} onChange={(e) => setOverdueOnly(e.target.checked)} />}
+                label="Overdue Only" />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Due Date"
-                  value={editFormData.dueDate}
-                  onChange={(newValue) =>
-                    setEditFormData({ ...editFormData, dueDate: newValue })
-                  }
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
+                <DatePicker label="Start Date" value={startDate} onChange={setStartDate}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }} />
               </LocalizationProvider>
             </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Return Date"
-                  value={editFormData.returnDate}
-                  onChange={(newValue) =>
-                    setEditFormData({ ...editFormData, returnDate: newValue })
-                  }
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
+                <DatePicker label="End Date" value={endDate} onChange={setEndDate}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }} />
               </LocalizationProvider>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Fine Amount"
-                type="number"
-                value={editFormData.fineAmount}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    fineAmount: e.target.value,
-                  })
-                }
-                InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={editFormData.finePaid}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        finePaid: e.target.checked,
-                      })
-                    }
-                  />
-                }
-                label="Fine Paid"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Admin Notes"
-                value={editFormData.notes}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, notes: e.target.value })
-                }
-                placeholder="Add notes about this update..."
-              />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateLoan} variant="contained" color="primary">
-            Update Loan
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => { setFilterStatus(""); setUserId(""); setBookId(""); setOverdueOnly(false); setStartDate(null); setEndDate(null); }}>
+            Clear All
+          </Button>
+          <Button onClick={() => setFilterModalOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={() => { setPage(0); loadLoans(); setFilterModalOpen(false); }}>
+            Apply
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Create Fine Dialog */}
-      <Dialog
-        open={createFineDialogOpen}
-        onClose={() => setCreateFineDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Create {fineType === "DAMAGE" ? "Damage" : "Loss"} Fine
+      {/* ── Return Confirm Modal ─────────────────────────────────────────────── */}
+      <ConfirmDialog
+        open={returnConfirmOpen}
+        title="Confirm Return"
+        message={`Mark loan #${returnTarget?.id} (${returnTarget?.bookTitle}) as returned?`}
+        onConfirm={handleConfirmReturn}
+        onCancel={() => { setReturnConfirmOpen(false); setReturnTarget(null); }}
+        severity="info"
+      />
+
+      {/* ── Extend Dialog ────────────────────────────────────────────────────── */}
+      <Dialog open={extendDialogOpen} onClose={() => setExtendDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Extend Loan
+          <IconButton size="small" onClick={() => setExtendDialogOpen(false)}><CloseIcon fontSize="small" /></IconButton>
         </DialogTitle>
+        <Divider />
         <DialogContent>
-          <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
-            Creating {fineType === "DAMAGE" ? "damage" : "loss"} fine for:{" "}
-            <strong>{selectedLoan?.bookTitle}</strong> borrowed by{" "}
-            <strong>{selectedLoan?.userName}</strong>
-            <br />
-            <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
-              This will update the loan status to{" "}
-              {fineType === "DAMAGE" ? "DAMAGED" : "LOST"}.
-            </Typography>
+          <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
+            Extending loan for <strong>{selectedLoan?.bookTitle}</strong>
           </Alert>
+          <FormControl fullWidth size="small">
+            <InputLabel>Extension Period</InputLabel>
+            <Select value={extensionDays} onChange={(e) => setExtensionDays(e.target.value)} label="Extension Period">
+              <MenuItem value={3}>3 Days</MenuItem>
+              <MenuItem value={7}>7 Days</MenuItem>
+              <MenuItem value={14}>14 Days</MenuItem>
+              <MenuItem value={30}>30 Days</MenuItem>
+            </Select>
+          </FormControl>
+          {selectedLoan && (
+            <Box sx={{ mt: 2, p: 1.5, bgcolor: "grey.50", borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Current due: <strong>{new Date(selectedLoan.dueDate).toLocaleDateString()}</strong>
+              </Typography>
+              <Typography variant="body2" color="primary.main">
+                New due: <strong>{new Date(new Date(selectedLoan.dueDate).getTime() + extensionDays * 86400000).toLocaleDateString()}</strong>
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => setExtendDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleExtend} variant="contained" startIcon={<ExtendIcon />}>Extend Loan</Button>
+        </DialogActions>
+      </Dialog>
 
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                required
-                label="Fine Amount"
-                type="number"
-                value={createFineFormData.amount}
-                onChange={(e) =>
-                  setCreateFineFormData({
-                    ...createFineFormData,
-                    amount: e.target.value,
-                  })
-                }
-                InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
-                }}
-                helperText={
-                  fineType === "DAMAGE"
-                    ? "Enter the repair/replacement cost"
-                    : "Enter the book replacement cost"
-                }
-              />
+      {/* ── Edit Loan Dialog ─────────────────────────────────────────────────── */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Edit Loan #{selectedLoan?.id}
+          <IconButton size="small" onClick={() => setEditDialogOpen(false)}><CloseIcon fontSize="small" /></IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2, mt: 1 }}>
+            Editing <strong>{selectedLoan?.bookTitle}</strong> — borrowed by <strong>{selectedLoan?.userName}</strong>
+          </Alert>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Status</InputLabel>
+                <Select value={editFormData.status} onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })} label="Status">
+                  <MenuItem value="CHECKED_OUT">Checked Out</MenuItem>
+                  <MenuItem value="OVERDUE">Overdue</MenuItem>
+                  <MenuItem value="RETURNED">Returned</MenuItem>
+                  <MenuItem value="LOST">Lost</MenuItem>
+                  <MenuItem value="DAMAGED">Damaged</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Reason"
-                multiline
-                rows={3}
-                value={createFineFormData.reason}
-                onChange={(e) =>
-                  setCreateFineFormData({
-                    ...createFineFormData,
-                    reason: e.target.value,
-                  })
-                }
-                placeholder={
-                  fineType === "DAMAGE"
-                    ? "Describe the damage..."
-                    : "Describe the circumstances of the loss..."
-                }
-              />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth size="small" label="Max Renewals" type="number"
+                value={editFormData.maxRenewals}
+                onChange={(e) => setEditFormData({ ...editFormData, maxRenewals: e.target.value })} />
             </Grid>
-
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker label="Due Date" value={editFormData.dueDate}
+                  onChange={(v) => setEditFormData({ ...editFormData, dueDate: v })}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }} />
+              </LocalizationProvider>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker label="Return Date" value={editFormData.returnDate}
+                  onChange={(v) => setEditFormData({ ...editFormData, returnDate: v })}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }} />
+              </LocalizationProvider>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField fullWidth size="small" label="Fine Amount" type="number"
+                value={editFormData.fineAmount}
+                onChange={(e) => setEditFormData({ ...editFormData, fineAmount: e.target.value })}
+                InputProps={{ startAdornment: <Typography sx={{ mr: 0.5, color: "text.secondary" }}>$</Typography> }} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex", alignItems: "center" }}>
+              <FormControlLabel
+                control={<Checkbox checked={editFormData.finePaid}
+                  onChange={(e) => setEditFormData({ ...editFormData, finePaid: e.target.checked })} />}
+                label="Fine Paid" />
+            </Grid>
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Admin Notes"
-                multiline
-                rows={2}
-                value={createFineFormData.notes}
-                onChange={(e) =>
-                  setCreateFineFormData({
-                    ...createFineFormData,
-                    notes: e.target.value,
-                  })
-                }
-                placeholder="Additional notes (optional)..."
-              />
+              <TextField fullWidth size="small" multiline rows={2} label="Admin Notes"
+                value={editFormData.notes}
+                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                placeholder="Notes about this update..." />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleUpdateLoan} variant="contained" startIcon={<EditIcon />}>Save Changes</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Create Fine Dialog ───────────────────────────────────────────────── */}
+      <Dialog open={createFineDialogOpen} onClose={() => setCreateFineDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Create {fineType === "DAMAGE" ? "Damage" : "Loss"} Fine
+          <IconButton size="small" onClick={() => setCreateFineDialogOpen(false)}><CloseIcon fontSize="small" /></IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+            Creating <strong>{fineType === "DAMAGE" ? "damage" : "loss"}</strong> fine for{" "}
+            <strong>{selectedLoan?.bookTitle}</strong> borrowed by <strong>{selectedLoan?.userName}</strong>.
+            <br />
+            <Typography variant="caption">Loan status will change to {fineType === "DAMAGE" ? "DAMAGED" : "LOST"}.</Typography>
+          </Alert>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <TextField fullWidth required size="small" label="Fine Amount" type="number"
+                value={createFineFormData.amount}
+                onChange={(e) => setCreateFineFormData({ ...createFineFormData, amount: e.target.value })}
+                InputProps={{ startAdornment: <Typography sx={{ mr: 0.5, color: "text.secondary" }}>$</Typography> }}
+                helperText={fineType === "DAMAGE" ? "Repair / replacement cost" : "Book replacement cost"} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField fullWidth size="small" label="Reason" multiline rows={2}
+                value={createFineFormData.reason}
+                onChange={(e) => setCreateFineFormData({ ...createFineFormData, reason: e.target.value })} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField fullWidth size="small" label="Admin Notes (optional)" multiline rows={2}
+                value={createFineFormData.notes}
+                onChange={(e) => setCreateFineFormData({ ...createFineFormData, notes: e.target.value })} />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={() => setCreateFineDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleCreateFine}
-            variant="contained"
+          <Button onClick={handleCreateFine} variant="contained"
             color={fineType === "DAMAGE" ? "warning" : "error"}
-          >
-            Create Fine & Update Status
+            startIcon={fineType === "DAMAGE" ? <DamageIcon /> : <LossIcon />}>
+            Create Fine
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Feedback Dialog ──────────────────────────────────────────────────── */}
+      <Dialog open={feedbackDialog.open} onClose={() => setFeedbackDialog({ ...feedbackDialog, open: false })} maxWidth="xs" fullWidth>
+        <DialogContent sx={{ pt: 3 }}>
+          <Alert severity={feedbackDialog.severity}>{feedbackDialog.message}</Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="contained" onClick={() => setFeedbackDialog({ ...feedbackDialog, open: false })}>OK</Button>
         </DialogActions>
       </Dialog>
     </Box>

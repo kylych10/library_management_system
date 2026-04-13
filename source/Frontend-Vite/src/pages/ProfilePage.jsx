@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   TextField,
   Button,
@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -21,86 +22,165 @@ import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import BadgeIcon from '@mui/icons-material/Badge';
 import CakeIcon from '@mui/icons-material/Cake';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import Layout from '../components/layout/Layout';
+import { updateProfile, uploadProfileImage } from '../store/features/auth/authThunk';
+import { fetchMyBookLoans } from '../store/features/bookLoans/bookLoanThunk';
+import { fetchActiveSubscription } from '../store/features/subscriptions/subscriptionThunk';
 
-/**
- * ProfilePage Component
- * User profile view and edit functionality
- */
+const PLAN_TIER_MAP = {
+  GOLD: 'Gold',
+  SILVER: 'Silver',
+  PLATINUM: 'Platinum',
+  BASIC: 'Basic',
+};
+
+const TIER_COLORS = {
+  Gold: '#F59E0B',
+  Silver: '#9CA3AF',
+  Platinum: '#8B5CF6',
+  Basic: '#4F46E5',
+};
+
+const getMembershipColor = (tier) => TIER_COLORS[tier] || '#4F46E5';
+
+const computeFavoriteGenre = (loans) => {
+  const returned = loans.filter((l) => l.status === 'RETURNED' && l.bookGenre);
+  if (!returned.length) return null;
+  const counts = {};
+  returned.forEach((l) => {
+    counts[l.bookGenre] = (counts[l.bookGenre] || 0) + 1;
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+};
+
 const ProfilePage = () => {
-  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { user, profileUpdateLoading } = useSelector((state) => state.auth);
+  const { myLoans } = useSelector((state) => state.bookLoans);
+  const { activeSubscription } = useSelector((state) => state.subscriptions);
 
   const [isEditing, setIsEditing] = useState(false);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // Form state
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || 'John Doe',
-    email: user?.email || 'john.doe@example.com',
-    phone: user?.phone || '+1 (555) 123-4567',
-    dateOfBirth: user?.dateOfBirth || '1990-01-15',
-    address: user?.address || '123 Library St, Reading City, RC 12345',
-    bio: user?.bio || 'Book lover and avid reader. Always looking for the next great story!',
+    fullName: '',
+    phone: '',
   });
 
-  // Mock user stats
-  const userStats = {
-    memberSince: '2023-01-15',
-    totalBooksRead: 47,
-    currentStreak: 12,
-    favoriteGenre: 'Science Fiction',
-    membershipTier: 'Gold',
-    points: 2450,
-  };
+  // Sync form data when user loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [user]);
 
-  const achievements = [
-    { id: 1, title: 'Bookworm', description: 'Read 50 books', earned: true },
-    { id: 2, title: 'Speed Reader', description: 'Read 10 books in a month', earned: true },
-    { id: 3, title: 'Diverse Reader', description: 'Read 5 different genres', earned: true },
-    { id: 4, title: 'Early Bird', description: 'Return 10 books early', earned: false },
-    { id: 5, title: 'Marathon Reader', description: 'Read for 30 days straight', earned: false },
-    { id: 6, title: 'Century Club', description: 'Read 100 books', earned: false },
-  ];
+  useEffect(() => {
+    dispatch(fetchMyBookLoans({ status: null, page: 0, size: 200 }));
+    dispatch(fetchActiveSubscription());
+  }, [dispatch]);
+
+  // Computed stats
+  const booksRead = useMemo(
+    () => myLoans.filter((l) => l.status === 'RETURNED').length,
+    [myLoans]
+  );
+
+  const favoriteGenre = useMemo(() => computeFavoriteGenre(myLoans), [myLoans]);
+
+  const memberTier = useMemo(() => {
+    if (!activeSubscription?.planCode) return 'Basic';
+    return PLAN_TIER_MAP[activeSubscription.planCode] || 'Basic';
+  }, [activeSubscription]);
+
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).getFullYear()
+    : '—';
+
+  // Achievements computed from real data
+  const achievements = useMemo(() => {
+    const earlyReturns = myLoans.filter((l) => l.status === 'RETURNED' && l.remainingDays > 0).length;
+    const genres = new Set(myLoans.filter((l) => l.bookGenre).map((l) => l.bookGenre)).size;
+
+    return [
+      {
+        id: 1,
+        title: 'First Book',
+        description: 'Borrow your first book',
+        earned: myLoans.length >= 1,
+      },
+      {
+        id: 2,
+        title: 'Bookworm',
+        description: 'Read 10 books',
+        earned: booksRead >= 10,
+      },
+      {
+        id: 3,
+        title: 'Avid Reader',
+        description: 'Read 25 books',
+        earned: booksRead >= 25,
+      },
+      {
+        id: 4,
+        title: 'Century Club',
+        description: 'Read 100 books',
+        earned: booksRead >= 100,
+      },
+      {
+        id: 5,
+        title: 'Diverse Reader',
+        description: 'Read 5 different genres',
+        earned: genres >= 5,
+      },
+      {
+        id: 6,
+        title: 'Early Bird',
+        description: 'Return 5 books before due date',
+        earned: earlyReturns >= 5,
+      },
+    ];
+  }, [myLoans, booksRead]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // TODO: Implement API call to update profile
-    setIsEditing(false);
-    showSnackbar('Profile updated successfully!', 'success');
+  const handleSave = async () => {
+    try {
+      await dispatch(updateProfile(formData)).unwrap();
+      setIsEditing(false);
+      showSnackbar('Profile updated successfully!', 'success');
+    } catch (err) {
+      showSnackbar(err || 'Failed to update profile', 'error');
+    }
   };
 
   const handleCancel = () => {
-    // Reset form data
     setFormData({
-      fullName: user?.fullName || 'John Doe',
-      email: user?.email || 'john.doe@example.com',
-      phone: user?.phone || '+1 (555) 123-4567',
-      dateOfBirth: user?.dateOfBirth || '1990-01-15',
-      address: user?.address || '123 Library St, Reading City, RC 12345',
-      bio: user?.bio || 'Book lover and avid reader. Always looking for the next great story!',
+      fullName: user?.fullName || '',
+      phone: user?.phone || '',
     });
     setIsEditing(false);
   };
 
-  const handleAvatarUpload = (event) => {
+  const handleAvatarUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      // TODO: Implement avatar upload
-      showSnackbar('Avatar updated successfully!', 'success');
+    if (!file) return;
+    try {
+      await dispatch(uploadProfileImage(file)).unwrap();
+      showSnackbar('Profile picture updated!', 'success');
       setAvatarDialogOpen(false);
+    } catch (err) {
+      showSnackbar(err || 'Failed to upload image', 'error');
     }
   };
 
@@ -108,56 +188,40 @@ const ProfilePage = () => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
-  const getMembershipColor = (tier) => {
-    switch (tier) {
-      case 'Gold':
-        return '#F59E0B';
-      case 'Silver':
-        return '#9CA3AF';
-      case 'Bronze':
-        return '#CD7F32';
-      default:
-        return '#4F46E5';
-    }
-  };
-
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-8 animate-fade-in-up">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <div className="mb-6 sm:mb-8 animate-fade-in-up">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
               My{' '}
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Profile
               </span>
             </h1>
-            <p className="text-lg text-gray-600">Manage your account information and preferences</p>
+            <p className="text-base sm:text-lg text-gray-600">Manage your account information and preferences</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Sidebar - Avatar and Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Left Sidebar */}
             <div className="lg:col-span-1 space-y-6">
               {/* Avatar Card */}
               <Card className="animate-fade-in-up">
-                <CardContent className="text-center p-8">
+                <CardContent className="text-center p-6 sm:p-8">
                   <div className="relative inline-block mb-4">
                     <Avatar
+                      src={user?.profileImage || undefined}
                       sx={{
-                        width: 120,
-                        height: 120,
-                        bgcolor: getMembershipColor(userStats.membershipTier),
-                        fontSize: '3rem',
+                        width: { xs: 96, sm: 120 },
+                        height: { xs: 96, sm: 120 },
+                        bgcolor: getMembershipColor(memberTier),
+                        fontSize: { xs: '2.5rem', sm: '3rem' },
                         fontWeight: 'bold',
                         margin: '0 auto',
                       }}
                     >
-                      {formData.fullName.charAt(0).toUpperCase()}
+                      {!user?.profileImage && (formData.fullName.charAt(0).toUpperCase() || '?')}
                     </Avatar>
                     <IconButton
                       onClick={() => setAvatarDialogOpen(true)}
@@ -175,88 +239,86 @@ const ProfilePage = () => {
                     </IconButton>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {formData.fullName}
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                    {formData.fullName || '—'}
                   </h3>
-                  <p className="text-gray-600 mb-4">{formData.email}</p>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 break-all">{user?.email}</p>
 
                   <Chip
                     icon={<VerifiedIcon />}
-                    label={`${userStats.membershipTier} Member`}
+                    label={`${memberTier} Member`}
                     sx={{
-                      bgcolor: `${getMembershipColor(userStats.membershipTier)}20`,
-                      color: getMembershipColor(userStats.membershipTier),
+                      bgcolor: `${getMembershipColor(memberTier)}20`,
+                      color: getMembershipColor(memberTier),
                       fontWeight: 600,
                       mb: 2,
                     }}
                   />
 
-                  <div className="flex items-center justify-center space-x-1 text-yellow-500 mt-2">
-                    <AutoAwesomeIcon />
-                    <span className="font-bold text-gray-900">{userStats.points}</span>
-                    <span className="text-gray-600 text-sm">points</span>
-                  </div>
+                  {activeSubscription && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {activeSubscription.daysRemaining > 0
+                        ? `${activeSubscription.daysRemaining} days remaining`
+                        : 'Subscription expired'}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Stats Card */}
+              {/* Reading Stats Card */}
               <Card className="animate-fade-in-up animation-delay-200">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    Reading Stats
-                  </h3>
+                <CardContent className="p-5 sm:p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Reading Stats</h3>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <LocalLibraryIcon sx={{ color: '#4F46E5' }} />
-                        <span className="text-gray-700">Books Read</span>
+                        <span className="text-gray-700 text-sm sm:text-base">Books Read</span>
                       </div>
-                      <span className="font-bold text-indigo-600">
-                        {userStats.totalBooksRead}
-                      </span>
+                      <span className="font-bold text-indigo-600">{booksRead}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <EmojiEventsIcon sx={{ color: '#F59E0B' }} />
-                        <span className="text-gray-700">Current Streak</span>
+                        <span className="text-gray-700 text-sm sm:text-base">Total Loans</span>
                       </div>
-                      <span className="font-bold text-orange-600">
-                        {userStats.currentStreak} days
-                      </span>
+                      <span className="font-bold text-orange-600">{myLoans.length}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <BadgeIcon sx={{ color: '#10B981' }} />
-                        <span className="text-gray-700">Member Since</span>
+                        <span className="text-gray-700 text-sm sm:text-base">Member Since</span>
                       </div>
-                      <span className="font-semibold text-gray-900">
-                        {new Date(userStats.memberSince).getFullYear()}
-                      </span>
+                      <span className="font-semibold text-gray-900">{memberSince}</span>
                     </div>
 
                     <div className="pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-600 mb-1">Favorite Genre</p>
-                      <Chip
-                        label={userStats.favoriteGenre}
-                        size="small"
-                        sx={{ bgcolor: '#EEF2FF', color: '#4F46E5', fontWeight: 600 }}
-                      />
+                      {favoriteGenre ? (
+                        <Chip
+                          label={favoriteGenre}
+                          size="small"
+                          sx={{ bgcolor: '#EEF2FF', color: '#4F46E5', fontWeight: 600 }}
+                        />
+                      ) : (
+                        <p className="text-xs text-gray-400">No books returned yet</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Right Content - Profile Form and Achievements */}
+            {/* Right Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Profile Information Card */}
               <Card className="animate-fade-in-up animation-delay-400">
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                       Profile Information
                     </h3>
                     {!isEditing ? (
@@ -269,13 +331,16 @@ const ProfilePage = () => {
                       </Button>
                     ) : (
                       <div className="flex space-x-2">
-                        <Button onClick={handleCancel} variant="outlined">
+                        <Button onClick={handleCancel} variant="outlined" size="small">
                           Cancel
                         </Button>
                         <Button
                           onClick={handleSave}
                           variant="contained"
-                          sx={{ bgcolor: '#4F46E5' }}
+                          size="small"
+                          disabled={profileUpdateLoading}
+                          startIcon={profileUpdateLoading ? <CircularProgress size={16} color="inherit" /> : null}
+                          sx={{ bgcolor: '#4F46E5', '&:hover': { bgcolor: '#4338CA' } }}
                         >
                           Save Changes
                         </Button>
@@ -283,7 +348,7 @@ const ProfilePage = () => {
                     )}
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {/* Full Name */}
                     <div>
                       <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
@@ -298,18 +363,14 @@ const ProfilePage = () => {
                         disabled={!isEditing}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
+                            '&:hover fieldset': { borderColor: '#4F46E5' },
+                            '&.Mui-focused fieldset': { borderColor: '#4F46E5' },
                           },
                         }}
                       />
                     </div>
 
-                    {/* Email */}
+                    {/* Email (read-only) */}
                     <div>
                       <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
                         <EmailIcon sx={{ fontSize: 20 }} />
@@ -317,19 +378,12 @@ const ProfilePage = () => {
                       </label>
                       <TextField
                         fullWidth
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        disabled={!isEditing}
+                        value={user?.email || ''}
+                        disabled
+                        helperText="Email cannot be changed"
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
+                            '&:hover fieldset': { borderColor: '#4F46E5' },
                           },
                         }}
                       />
@@ -347,97 +401,36 @@ const ProfilePage = () => {
                         value={formData.phone}
                         onChange={handleChange}
                         disabled={!isEditing}
+                        placeholder="Enter your phone number"
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
+                            '&:hover fieldset': { borderColor: '#4F46E5' },
+                            '&.Mui-focused fieldset': { borderColor: '#4F46E5' },
                           },
                         }}
                       />
                     </div>
 
-                    {/* Date of Birth */}
+                    {/* Member Status (read-only) */}
                     <div>
                       <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                        <CakeIcon sx={{ fontSize: 20 }} />
-                        <span>Date of Birth</span>
+                        <AutoAwesomeIcon sx={{ fontSize: 20 }} />
+                        <span>Member Status</span>
                       </label>
-                      <TextField
-                        fullWidth
-                        name="dateOfBirth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                          },
-                        }}
-                      />
-                    </div>
-
-                    {/* Address */}
-                    <div>
-                      <label className="flex items-center space-x-2 text-gray-700 font-medium mb-2">
-                        <LocationOnIcon sx={{ fontSize: 20 }} />
-                        <span>Address</span>
-                      </label>
-                      <TextField
-                        fullWidth
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        multiline
-                        rows={2}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                          },
-                        }}
-                      />
-                    </div>
-
-                    {/* Bio */}
-                    <div>
-                      <label className="text-gray-700 font-medium mb-2 block">
-                        Bio
-                      </label>
-                      <TextField
-                        fullWidth
-                        name="bio"
-                        value={formData.bio}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        multiline
-                        rows={3}
-                        placeholder="Tell us about yourself..."
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#4F46E5',
-                            },
-                          },
-                        }}
-                      />
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <Chip
+                          icon={<VerifiedIcon />}
+                          label={`${memberTier} Member`}
+                          sx={{
+                            bgcolor: `${getMembershipColor(memberTier)}20`,
+                            color: getMembershipColor(memberTier),
+                            fontWeight: 600,
+                          }}
+                        />
+                        {activeSubscription?.planName && (
+                          <span className="text-sm text-gray-600">{activeSubscription.planName}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -445,8 +438,8 @@ const ProfilePage = () => {
 
               {/* Achievements Card */}
               <Card className="animate-fade-in-up animation-delay-600">
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                <CardContent className="p-6 sm:p-8">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
                     Achievements
                   </h3>
 
@@ -462,19 +455,19 @@ const ProfilePage = () => {
                       >
                         <div className="flex items-start space-x-3">
                           <div
-                            className={`p-2 rounded-lg ${
+                            className={`p-2 rounded-lg flex-shrink-0 ${
                               achievement.earned ? 'bg-yellow-400' : 'bg-gray-300'
                             }`}
                           >
                             <EmojiEventsIcon
-                              sx={{ color: achievement.earned ? '#FFF' : '#6B7280' }}
+                              sx={{ color: achievement.earned ? '#FFF' : '#6B7280', fontSize: 20 }}
                             />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-gray-900 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-900 mb-0.5 text-sm sm:text-base">
                               {achievement.title}
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600">
                               {achievement.description}
                             </p>
                             {achievement.earned && (
@@ -501,7 +494,7 @@ const ProfilePage = () => {
       {/* Avatar Upload Dialog */}
       <Dialog
         open={avatarDialogOpen}
-        onClose={() => setAvatarDialogOpen(false)}
+        onClose={() => !profileUpdateLoading && setAvatarDialogOpen(false)}
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
         <DialogTitle>Update Profile Picture</DialogTitle>
@@ -518,10 +511,11 @@ const ProfilePage = () => {
               <Button
                 variant="contained"
                 component="span"
-                startIcon={<PhotoCameraIcon />}
-                sx={{ bgcolor: '#4F46E5' }}
+                startIcon={profileUpdateLoading ? <CircularProgress size={16} color="inherit" /> : <PhotoCameraIcon />}
+                disabled={profileUpdateLoading}
+                sx={{ bgcolor: '#4F46E5', '&:hover': { bgcolor: '#4338CA' } }}
               >
-                Choose Photo
+                {profileUpdateLoading ? 'Uploading...' : 'Choose Photo'}
               </Button>
             </label>
             <p className="text-sm text-gray-600 mt-4">
@@ -530,7 +524,9 @@ const ProfilePage = () => {
           </div>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAvatarDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setAvatarDialogOpen(false)} disabled={profileUpdateLoading}>
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -538,11 +534,11 @@ const ProfilePage = () => {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          onClose={handleCloseSnackbar}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
           severity={snackbar.severity}
           sx={{ width: '100%' }}
         >

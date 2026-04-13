@@ -123,16 +123,16 @@ export const fetchSubscriptionById = createAsyncThunk(
 );
 
 /**
- * Renew expired subscription
- * POST /api/subscriptions/renew/{subscriptionId}
+ * Renew subscription without payment (re-subscribes to same plan)
+ * POST /api/subscriptions/renew-free/{subscriptionId}
  */
 export const renewSubscription = createAsyncThunk(
   'subscriptions/renew',
-  async ({ subscriptionId, subscribeRequest }, { rejectWithValue }) => {
+  async (subscriptionId, { rejectWithValue }) => {
     try {
       const response = await api.post(
-        `${API_URL}/renew/${subscriptionId}`,
-        subscribeRequest,
+        `${API_URL}/renew-free/${subscriptionId}`,
+        null,
         { headers: getHeaders() }
       );
       return response.data;

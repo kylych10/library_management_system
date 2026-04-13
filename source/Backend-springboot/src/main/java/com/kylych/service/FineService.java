@@ -41,6 +41,13 @@ public interface FineService {
 
     void markFineAsPaid(Long fineId, Long amount, String transactionId);
 
+    /**
+     * Mark a fine as paid directly (admin only, no payment gateway)
+     * @param fineId Fine ID
+     * @throws FineException if fine not found
+     */
+    FineDTO markFineAsPaidDirect(Long fineId) throws FineException;
+
     // ==================== WAIVER OPERATIONS ====================
 
     /**

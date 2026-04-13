@@ -102,7 +102,7 @@ export default function ReviewCard({ review, onEdit, showBookInfo = false }) {
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 {review.userName}
               </Typography>
-              {review.verifiedReader && (
+              {(review.isVerifiedReader || review.verifiedReader) && (
                 <Chip
                   icon={<VerifiedIcon sx={{ fontSize: 16 }} />}
                   label="Verified Reader"
@@ -124,7 +124,7 @@ export default function ReviewCard({ review, onEdit, showBookInfo = false }) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Rating value={review.rating} readOnly size="small" precision={0.5} />
               <Typography variant="caption" color="text.secondary">
-                {formatDate(review.createdDate)}
+                {formatDate(review.createdAt || review.createdDate)}
               </Typography>
             </Box>
           </Box>
@@ -244,9 +244,10 @@ export default function ReviewCard({ review, onEdit, showBookInfo = false }) {
             </Typography>
           </Box>
 
-          {review.updatedDate && review.updatedDate !== review.createdDate && (
+          {(review.updatedAt || review.updatedDate) &&
+            (review.updatedAt || review.updatedDate) !== (review.createdAt || review.createdDate) && (
             <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              Edited on {formatDate(review.updatedDate)}
+              Edited on {formatDate(review.updatedAt || review.updatedDate)}
             </Typography>
           )}
         </Box>

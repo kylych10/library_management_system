@@ -22,7 +22,9 @@ public class UserMapper {
         userDTO.setPhone(user.getPhone());
         userDTO.setLastLogin(user.getLastLogin());
         userDTO.setRole(user.getRole());
-
+        userDTO.setProfileImage(user.getProfileImage());
+        userDTO.setVerified(user.getVerified());
+        userDTO.setCreatedAt(user.getCreatedAt());
 
         return userDTO;
     }

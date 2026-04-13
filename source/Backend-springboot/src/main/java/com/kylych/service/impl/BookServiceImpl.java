@@ -194,10 +194,19 @@ public class BookServiceImpl implements BookService {
                 searchRequest.getSortDirection()
         );
 
+        // availabilityMode: 0=ALL, 1=AVAILABLE_ONLY, 2=CHECKED_OUT_ONLY
+        // null → 0 (all), true → 1 (available), false → 2 (checked out)
+        int availabilityMode = 0;
+        if (Boolean.TRUE.equals(searchRequest.getAvailableOnly())) {
+            availabilityMode = 1;
+        } else if (Boolean.FALSE.equals(searchRequest.getAvailableOnly())) {
+            availabilityMode = 2;
+        }
+
         Page<Book> bookPage = bookRepository.searchBooksWithFilters(
                 searchRequest.getSearchTerm(),
                 searchRequest.getGenreId(),
-                searchRequest.getAvailableOnly() != null ? searchRequest.getAvailableOnly() : false,
+                availabilityMode,
                 pageable
         );
 

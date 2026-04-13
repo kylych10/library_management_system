@@ -10,6 +10,7 @@ import BookDetailsPage from "./pages/BookDetailsPage";
 
 
 import ProfilePage from "./pages/ProfilePage";
+import AdminProfilePage from "./Admin/pages/AdminProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 
 import UserLayout from "./components/layout/UserLayout";
@@ -39,6 +40,7 @@ import BooksPage from "./pages/Books/BooksPage";
 import AdminDashboard from "./Admin/pages/AdminDashboard";
 import AdminFinesPage from "./Admin/pages/fines/AdminFinesPage";
 import WishlistPage from "./pages/Wishlist/WishlistPage";
+import FriendsPage from "./pages/Friends/FriendsPage";
 
 // Lazy load admin pages
 const AdminBooksPage = React.lazy(() => import("./Admin/pages/books/AdminBooksPage"));
@@ -102,6 +104,7 @@ function App() {
               <Route path="/admin/fines" element={<AdminFinesPage />} />
               <Route path="/admin/notifications" element={<NotificationPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
+              <Route path="/admin/profile" element={<AdminProfilePage />} />
               <Route
                   path="/admin/books"
                   element={
@@ -124,6 +127,7 @@ function App() {
               <Route path="/my-fines" element={<MyFinesPage />} />
               <Route path="/subscriptions" element={<SubscriptionsPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/friends" element={<FriendsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/notifications" element={<NotificationPage />} />

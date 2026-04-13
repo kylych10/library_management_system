@@ -79,6 +79,26 @@ public class SubscriptionController {
     }
 
     /**
+     * Renew subscription immediately without payment (demo mode — re-subscribes to same plan)
+     * POST /api/subscriptions/renew-free/{subscriptionId}
+     */
+    @PostMapping("/renew-free/{subscriptionId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<?> renewFree(@PathVariable Long subscriptionId) {
+        try {
+            log.info("Free renewal request for subscription: {}", subscriptionId);
+            SubscriptionDTO subscription = subscriptionService.getSubscriptionById(subscriptionId);
+            // Re-subscribe to the same plan, which cancels the old one and creates a fresh one
+            SubscriptionDTO renewed = subscriptionService.subscribeFree(subscription.getPlanId());
+            return ResponseEntity.ok(renewed);
+        } catch (SubscriptionException | UserException e) {
+            log.error("Free renewal failed for subscription: {}", subscriptionId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), false));
+        }
+    }
+
+    /**
      * Get active and past subscriptions for current user
      * GET /api/subscriptions/my?page=0&size=10
      */

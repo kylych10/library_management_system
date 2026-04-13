@@ -47,7 +47,9 @@ import {
     Gavel as FineIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
 import { logout } from '../../store/features/auth/authSlice';
+import { fetchUnreadCount } from '../../store/features/notification/notificationThunk';
 import ThemeToggle from '../../components/theme/ThemeToggle';
 
 const drawerWidth = 280;
@@ -129,10 +131,17 @@ export default function AdminLayout() {
     const dispatch = useDispatch();
 
     const { user } = useSelector((state) => state.auth);
+    const { unreadCount } = useSelector((state) => state.notification);
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [subscriptionsOpen, setSubscriptionsOpen] = useState(true);
+
+    useEffect(() => {
+        dispatch(fetchUnreadCount());
+        const interval = setInterval(() => dispatch(fetchUnreadCount()), 30000);
+        return () => clearInterval(interval);
+    }, [dispatch]);
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -628,17 +637,22 @@ export default function AdminLayout() {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                 }}
             >
-                <Toolbar>
+                <Toolbar sx={{ gap: { xs: 0.5, sm: 1 } }}>
                     <IconButton
                         color="inherit"
                         edge="start"
                         onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { md: 'none' } }}
+                        sx={{ mr: { xs: 0.5, sm: 2 }, display: { md: 'none' } }}
                     >
                         <MenuIcon />
                     </IconButton>
 
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        component="div"
+                        sx={{ flexGrow: 1, fontWeight: 700, fontSize: { xs: '0.95rem', sm: '1.25rem' } }}
+                    >
                         {navigationItems.find((item) => {
                             if (item.children) {
                                 return item.children.some((child) => isActive(child.path));
@@ -648,26 +662,34 @@ export default function AdminLayout() {
                     </Typography>
 
                     <Tooltip title="Notifications">
-                        <IconButton onClick={() => navigate('/admin/notifications')}>
-                            <Badge badgeContent={5} color="error">
-                                <NotificationsIcon />
+                        <IconButton
+                            size="small"
+                            onClick={() => navigate('/admin/notifications')}
+                            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+                        >
+                            <Badge badgeContent={unreadCount || 0} color="error">
+                                <NotificationsIcon fontSize="small" />
                             </Badge>
                         </IconButton>
                     </Tooltip>
 
                     <Tooltip title="Settings">
-                        <IconButton sx={{ ml: 1 }} onClick={() => navigate('/admin/settings')}>
-                            <SettingsIcon />
+                        <IconButton
+                            size="small"
+                            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+                            onClick={() => navigate('/admin/settings')}
+                        >
+                            <SettingsIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
 
-                    <Box sx={{ ml: 2 }}>
+                    <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
                         <ThemeToggle />
                     </Box>
 
                     <Tooltip title="Account">
-                        <IconButton onClick={handleProfileMenuOpen} sx={{ ml: 1 }}>
-                            <Avatar src={user?.profilePicture} sx={{ width: 36, height: 36 }}>
+                        <IconButton onClick={handleProfileMenuOpen} sx={{ ml: { xs: 0, sm: 0.5 } }}>
+                            <Avatar src={user?.profileImage} sx={{ width: { xs: 30, sm: 36 }, height: { xs: 30, sm: 36 }, fontSize: { xs: '0.85rem', sm: '1rem' } }}>
                                 {user?.fullName?.charAt(0)}
                             </Avatar>
                         </IconButton>
@@ -683,7 +705,7 @@ export default function AdminLayout() {
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-                <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/admin/settings'); }}>
+                <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/admin/profile'); }}>
                     <ListItemIcon>
                         <AccountCircleIcon fontSize="small" />
                     </ListItemIcon>
@@ -749,10 +771,11 @@ export default function AdminLayout() {
                 }}
             >
                 <Toolbar />
-                <Box sx={{ p: 3 }}>
+                <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
                     <Outlet />
                 </Box>
             </Box>
+
         </Box>
     );
 }

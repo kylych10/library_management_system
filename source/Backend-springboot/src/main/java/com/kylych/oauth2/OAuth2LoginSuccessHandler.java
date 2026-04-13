@@ -52,7 +52,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     }
 
     protected String determineTargetUrl(String token, User user) {
-        String frontendUrl = "http://localhost:5174/oauth2/callback";
+        String frontendUrl = "http://localhost:5173/oauth2/callback";
 
         return UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("token", token)

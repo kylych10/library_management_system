@@ -14,7 +14,7 @@ import {
   Chip,
   Box,
   Typography,
-  CircularProgress,
+  Skeleton,
   alpha,
 } from "@mui/material";
 import {
@@ -86,13 +86,13 @@ export default function DataTable({
     <Paper
       sx={{
         width: "100%",
-        overflow: "hidden",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         borderRadius: 2,
+        overflow: "hidden",
       }}
     >
-      <TableContainer>
-        <Table stickyHeader>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table stickyHeader sx={{ minWidth: 600 }}>
           <TableHead>
             <TableRow>
               {selectable && (
@@ -134,19 +134,33 @@ export default function DataTable({
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={
-                    columns.length +
-                    (selectable ? 1 : 0) +
-                    (actions || customActions ? 1 : 0)
-                  }
-                  align="center"
-                  sx={{ py: 8 }}
-                >
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 6 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  {selectable && (
+                    <TableCell padding="checkbox">
+                      <Skeleton variant="rectangular" width={18} height={18} sx={{ borderRadius: 0.5 }} />
+                    </TableCell>
+                  )}
+                  {columns.map((column, ci) => (
+                    <TableCell key={column.field}>
+                      <Skeleton
+                        variant="text"
+                        width={`${[70, 55, 80, 60, 75, 50][ci % 6]}%`}
+                        height={24}
+                        sx={{ borderRadius: 1 }}
+                      />
+                    </TableCell>
+                  ))}
+                  {(actions || customActions) && (
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Skeleton variant="circular" width={28} height={28} />
+                        <Skeleton variant="circular" width={28} height={28} />
+                      </Box>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))
             ) : data.length === 0 ? (
               <TableRow>
                 <TableCell

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
@@ -47,6 +47,7 @@ import {
 } from '@mui/icons-material';
 import {
   fetchNotifications,
+  fetchUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
@@ -108,7 +109,7 @@ const NOTIFICATION_TYPES = {
 
 const NotificationPage = () => {
   const dispatch = useDispatch();
-  const { notifications, totalPages, currentPage, loading, unreadCount } = useSelector(
+  const { notifications, totalPages, currentPage, totalElements, loading, unreadCount } = useSelector(
     (state) => state.notification
   );
 
@@ -118,38 +119,22 @@ const NotificationPage = () => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  // Ref keeps the value current even when MUI Menu fires onClose before MenuItem onClick
+  const selectedNotificationRef = useRef(null);
 
-  // Load notifications on mount and when filters change
+  // Load notifications on mount and page changes only — filtering is done client-side
   useEffect(() => {
     loadNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabValue, page, selectedTypes]);
+  }, [page]);
 
   const loadNotifications = () => {
-    const params = {
-      page: page - 1,
-      size: 20,
-    };
-
-    // Add read filter based on tab
-    if (tabValue === 'unread') {
-      params.isRead = false;
-    } else if (tabValue === 'read') {
-      params.isRead = true;
-    }
-
-    // Add type filters
-    if (selectedTypes.length > 0) {
-      params.types = selectedTypes.join(',');
-    }
-
-    dispatch(fetchNotifications(params));
+    dispatch(fetchNotifications({ page: page - 1, size: 20 }));
   };
 
   // Handlers
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    setPage(1);
   };
 
   const handlePageChange = (event, value) => {
@@ -160,30 +145,27 @@ const NotificationPage = () => {
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
-    setPage(1);
   };
 
   const handleClearFilters = () => {
     setSelectedTypes([]);
-    setPage(1);
   };
 
   const handleMarkAllAsRead = async () => {
     await dispatch(markAllNotificationsAsRead());
-    loadNotifications();
+    dispatch(fetchUnreadCount());
   };
 
   const handleClearAll = async () => {
     if (window.confirm('Are you sure you want to delete all notifications?')) {
       await dispatch(deleteAllNotifications());
-      loadNotifications();
+      dispatch(fetchUnreadCount());
     }
   };
 
-  const handleCardClick = async (notification) => {
+  const handleCardClick = (notification) => {
     if (!notification.isRead) {
-      await dispatch(markNotificationAsRead(notification.id));
-      loadNotifications();
+      dispatch(markNotificationAsRead(notification.id));
     }
   };
 
@@ -191,32 +173,49 @@ const NotificationPage = () => {
     event.stopPropagation();
     setMenuAnchor(event.currentTarget);
     setSelectedNotification(notification);
+    selectedNotificationRef.current = notification;
   };
 
   const handleMenuClose = () => {
     setMenuAnchor(null);
     setSelectedNotification(null);
+    selectedNotificationRef.current = null;
   };
 
-  const handleMarkAsRead = async () => {
-    if (selectedNotification && !selectedNotification.isRead) {
-      await dispatch(markNotificationAsRead(selectedNotification.id));
-      loadNotifications();
+  const handleMarkAsRead = () => {
+    // Use ref value — guaranteed to be current even if state was cleared by onClose
+    const notification = selectedNotificationRef.current;
+    setMenuAnchor(null);
+    setSelectedNotification(null);
+    selectedNotificationRef.current = null;
+    if (notification && !notification.isRead) {
+      dispatch(markNotificationAsRead(notification.id));
     }
-    handleMenuClose();
   };
 
-  const handleDelete = async () => {
-    if (selectedNotification) {
-      await dispatch(deleteNotification(selectedNotification.id));
-      loadNotifications();
+  const handleDelete = () => {
+    const notification = selectedNotificationRef.current;
+    setMenuAnchor(null);
+    setSelectedNotification(null);
+    selectedNotificationRef.current = null;
+    if (notification) {
+      dispatch(deleteNotification(notification.id));
     }
-    handleMenuClose();
   };
 
-  // Calculate counts
-  const totalCount = notifications.length;
-  const readCount = notifications.filter((n) => n.isRead).length;
+  // Client-side filtering
+  const filteredNotifications = notifications.filter((n) => {
+    const matchesTab =
+      tabValue === 'all' ||
+      (tabValue === 'unread' && !n.isRead) ||
+      (tabValue === 'read' && n.isRead);
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(n.type);
+    return matchesTab && matchesType;
+  });
+
+  // Counts from Redux state (accurate across all pages)
+  const totalCount = totalElements;
+  const readCount = Math.max(0, totalElements - unreadCount);
 
   // Get empty state message
   const getEmptyMessage = () => {
@@ -299,7 +298,7 @@ const NotificationPage = () => {
                   color="error"
                   startIcon={<DeleteSweepIcon />}
                   onClick={handleClearAll}
-                  disabled={totalCount === 0}
+                  disabled={notifications.length === 0}
                   size="small"
                 >
                   Clear all
@@ -418,7 +417,7 @@ const NotificationPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress size={48} />
           </Box>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <Paper
             elevation={0}
             sx={{
@@ -441,7 +440,7 @@ const NotificationPage = () => {
           </Paper>
         ) : (
           <Stack spacing={2}>
-            {notifications.map((notification) => (
+            {filteredNotifications.map((notification) => (
               <NotificationCard
                 key={notification.id}
                 notification={notification}

@@ -31,7 +31,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
       loan.status === 'CHECKED_OUT' &&
       loan.renewalCount < loan.maxRenewals &&
       !loan.isOverdue &&
-      (loan.fineAmount === 0 || loan.finePaid)
+      (!loan.fineAmount || loan.finePaid)
     );
   };
 
@@ -44,42 +44,28 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
   };
 
   const getStatusConfig = () => {
-    if (loan.returnDate) {
-      return {
-        label: 'Returned',
-        icon: <CheckCircleIcon />,
-        color: '#10B981',
-        bgColor: 'rgba(16, 185, 129, 0.1)',
-      };
+    switch (loan.status) {
+      case 'CHECKED_OUT':
+        return { label: 'Checked Out', icon: <CheckCircleIcon />, color: '#3B82F6', bgColor: 'rgba(59, 130, 246, 0.1)' };
+      case 'OVERDUE':
+        return { label: `Overdue${loan.overdueDays ? ` (${loan.overdueDays} days)` : ''}`, icon: <WarningIcon />, color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' };
+      case 'RETURNED':
+        return { label: 'Returned', icon: <CheckCircleIcon />, color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' };
+      case 'LOST':
+        return { label: 'Lost', icon: <WarningIcon />, color: '#7C3AED', bgColor: 'rgba(124, 58, 237, 0.1)' };
+      case 'DAMAGED':
+        return { label: 'Damaged', icon: <WarningIcon />, color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' };
+      case 'CANCELLED':
+        return { label: 'Cancelled', icon: <AccessTimeIcon />, color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' };
+      default:
+        return { label: loan.status || 'Unknown', icon: <AccessTimeIcon />, color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' };
     }
-    if (loan.isOverdue) {
-      return {
-        label: `Overdue (${loan.overdueDays} days)`,
-        icon: <WarningIcon />,
-        color: '#EF4444',
-        bgColor: 'rgba(239, 68, 68, 0.1)',
-      };
-    }
-    if (loan.status === 'CHECKED_OUT') {
-      return {
-        label: 'Checked Out',
-        icon: <CheckCircleIcon />,
-        color: '#3B82F6',
-        bgColor: 'rgba(59, 130, 246, 0.1)',
-      };
-    }
-    return {
-      label: loan.status,
-      icon: <AccessTimeIcon />,
-      color: '#6B7280',
-      bgColor: 'rgba(107, 114, 128, 0.1)',
-    };
   };
 
   const statusConfig = getStatusConfig();
 
   const getDueDateWarning = () => {
-    if (loan.returnDate || loan.isOverdue) return null;
+    if (loan.returnDate || loan.status === 'OVERDUE' || loan.status === 'RETURNED' || loan.status === 'LOST' || loan.status === 'DAMAGED') return null;
 
     const dueDate = new Date(loan.dueDate);
     const today = new Date();
@@ -111,18 +97,18 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
 
   return (
     <Card
-      elevation={loan.isOverdue ? 8 : 2}
+      elevation={loan.status === 'OVERDUE' ? 8 : 2}
       sx={{
         position: 'relative',
         borderRadius: 3,
         overflow: 'hidden',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        border: loan.isOverdue ? '2px solid #EF4444' : '1px solid rgba(0,0,0,0.08)',
+        border: loan.status === 'OVERDUE' ? '2px solid #EF4444' : loan.status === 'LOST' ? '2px solid #7C3AED' : loan.status === 'DAMAGED' ? '2px solid #F59E0B' : '1px solid rgba(0,0,0,0.08)',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: 8,
         },
-        '&::before': loan.isOverdue
+        '&::before': loan.status === 'OVERDUE'
           ? {
               content: '""',
               position: 'absolute',
@@ -140,11 +126,13 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
         sx={{
           background: statusConfig.bgColor,
           borderBottom: `1px solid ${statusConfig.color}20`,
-          px: 3,
+          px: { xs: 2, sm: 3 },
           py: 1.5,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 1,
         }}
       >
         <Chip
@@ -163,7 +151,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
         {loan.fineAmount > 0 && !loan.finePaid && (
           <Chip
             icon={<PaymentIcon />}
-            label={`Fine: $${loan.fineAmount.toFixed(2)}`}
+            label={`Fine: $${parseFloat(loan.fineAmount || 0).toFixed(2)}`}
             size="small"
             color="error"
             sx={{
@@ -174,15 +162,15 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
         )}
       </Box>
 
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, flexDirection: { xs: 'column', md: 'row' } }}>
           {/* Book Info Section */}
           <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
             {/* Book Icon/Cover Placeholder */}
             <Box
               sx={{
-                width: 80,
-                height: 120,
+                width: { xs: 60, sm: 80 },
+                height: { xs: 90, sm: 120 },
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 display: 'flex',
@@ -197,7 +185,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
               }}
               onClick={() => navigate(`/books/${loan.bookId}`)}
             >
-              <MenuBookIcon sx={{ fontSize: 40, color: 'white', opacity: 0.9 }} />
+              <MenuBookIcon sx={{ fontSize: { xs: 28, sm: 40 }, color: 'white', opacity: 0.9 }} />
             </Box>
 
             {/* Book Details */}
@@ -239,7 +227,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
 
           {/* Loan Details Section */}
           <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: { xs: 1.5, sm: 2 }, mb: 2 }}>
               <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                   Checkout Date
@@ -339,7 +327,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
         <Divider sx={{ my: 2 }} />
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'stretch', sm: 'flex-end' } }}>
           <Button
             size="small"
             variant="outlined"
@@ -349,6 +337,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
               color: '#667eea',
               textTransform: 'none',
               fontWeight: 600,
+              flex: { xs: '1 1 100%', sm: '0 0 auto' },
               '&:hover': {
                 borderColor: '#764ba2',
                 bgcolor: 'rgba(102, 126, 234, 0.05)',
@@ -368,6 +357,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 textTransform: 'none',
                 fontWeight: 600,
+                flex: { xs: '1 1 calc(50% - 4px)', sm: '0 0 auto' },
                 boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
                 '&:hover': {
                   transform: 'translateY(-2px)',
@@ -390,17 +380,18 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
               sx={{
                 textTransform: 'none',
                 fontWeight: 600,
+                flex: { xs: '1 1 calc(50% - 4px)', sm: '0 0 auto' },
                 '&:hover': {
                   transform: 'translateY(-2px)',
                 },
                 transition: 'all 0.3s',
               }}
             >
-              Pay Fine ${loan.fineAmount.toFixed(2)}
+              Pay Fine ${parseFloat(loan.fineAmount || 0).toFixed(2)}
             </Button>
           )}
 
-          {loan.status === 'CHECKED_OUT' && !loan.returnDate && (
+          {(loan.status === 'CHECKED_OUT' || loan.status === 'OVERDUE') && !loan.returnDate && (
             <Button
               size="small"
               variant="outlined"
@@ -410,6 +401,7 @@ const LoanCard = ({ loan, onRenew, onPayFine, onReturn }) => {
               sx={{
                 textTransform: 'none',
                 fontWeight: 600,
+                flex: { xs: '1 1 calc(50% - 4px)', sm: '0 0 auto' },
                 '&:hover': {
                   transform: 'translateY(-2px)',
                 },

@@ -267,22 +267,20 @@ export default function AdminUserSubscriptionsPage() {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            User Subscriptions
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Monitor and manage all user subscriptions
-          </Typography>
-        </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
+          User Subscriptions
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Monitor and manage all user subscriptions
+        </Typography>
       </Box>
 
       {/* Stats Summary */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'success.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {allActiveSubscriptions?.filter((s) => s.isActive && !s.cancelledAt).length || 0}
             </Typography>
             <Typography variant="body2">Active Subscriptions</Typography>
@@ -290,7 +288,7 @@ export default function AdminUserSubscriptionsPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'error.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'error.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {allActiveSubscriptions?.filter((s) => s.isExpired).length || 0}
             </Typography>
             <Typography variant="body2">Expired</Typography>
@@ -298,7 +296,7 @@ export default function AdminUserSubscriptionsPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'warning.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {allActiveSubscriptions?.filter((s) => s.cancelledAt).length || 0}
             </Typography>
             <Typography variant="body2">Cancelled</Typography>
@@ -306,7 +304,7 @@ export default function AdminUserSubscriptionsPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'primary.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               ${calculateTotalRevenue().toFixed(2)}
             </Typography>
             <Typography variant="body2">Total Revenue</Typography>

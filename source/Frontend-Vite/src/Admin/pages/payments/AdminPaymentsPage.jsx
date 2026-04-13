@@ -216,9 +216,9 @@ export default function AdminPaymentsPage() {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 1.5, sm: 0 }, mb: 3 }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
             Payments Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -232,6 +232,7 @@ export default function AdminPaymentsPage() {
           disabled={filteredPayments.length === 0}
           sx={{
             background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+            alignSelf: { xs: 'stretch', sm: 'auto' },
           }}
         >
           Export CSV

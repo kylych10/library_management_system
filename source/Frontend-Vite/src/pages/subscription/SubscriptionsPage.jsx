@@ -100,20 +100,12 @@ const SubscriptionsPage = () => {
     }
   };
 
-  // Handle renew subscription
+  // Handle renew subscription (no payment gateway — re-subscribes to same plan)
   const handleRenewClick = async (subscription) => {
     try {
-      const result = await dispatch(
-        renewSubscription(subscription.id)
-      ).unwrap();
-
-      if (result.paymentUrl) {
-        // Redirect to payment gateway
-        window.location.href = result.paymentUrl;
-      } else {
-        showSnackbar("Subscription renewed successfully!", "success");
-        dispatch(fetchActiveSubscription());
-      }
+      await dispatch(renewSubscription(subscription.id)).unwrap();
+      showSnackbar("Subscription renewed successfully!", "success");
+      dispatch(fetchActiveSubscription());
     } catch (err) {
       showSnackbar(err.message || "Failed to renew subscription.", "error");
     }
@@ -201,13 +193,13 @@ const SubscriptionsPage = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: 6 }}>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: { xs: 3, sm: 6 } }}>
       <Container maxWidth="lg">
         {/* Page Header with Gradient Background */}
         <Box
           sx={{
             textAlign: "center",
-            mb: 6,
+            mb: { xs: 3, sm: 6 },
             position: "relative",
             "&::before": {
               content: '""',
@@ -215,7 +207,7 @@ const SubscriptionsPage = () => {
               top: "-100px",
               left: "50%",
               transform: "translateX(-50%)",
-              width: "800px",
+              width: { xs: "100%", md: "800px" },
               height: "800px",
               background:
                 "radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)",
@@ -229,19 +221,20 @@ const SubscriptionsPage = () => {
               sx={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 2,
+                gap: { xs: 1, sm: 2 },
                 mb: 2,
-                p: 1.5,
+                p: { xs: 1, sm: 1.5 },
                 borderRadius: 3,
                 background:
                   "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
               }}
             >
-              <WorkspacePremiumIcon sx={{ fontSize: 40, color: "#667eea" }} />
+              <WorkspacePremiumIcon sx={{ fontSize: { xs: 28, sm: 40 }, color: "#667eea" }} />
               <Typography
                 variant="h3"
                 sx={{
                   fontWeight: 800,
+                  fontSize: { xs: "1.6rem", sm: "3rem" },
                   background:
                     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   WebkitBackgroundClip: "text",
@@ -260,6 +253,8 @@ const SubscriptionsPage = () => {
                 mx: "auto",
                 fontWeight: 400,
                 lineHeight: 1.6,
+                fontSize: { xs: "0.9rem", sm: "1.25rem" },
+                px: { xs: 1, sm: 0 },
               }}
             >
               Choose the perfect plan for your reading journey. Upgrade,
@@ -269,8 +264,8 @@ const SubscriptionsPage = () => {
         </Box>
 
         {/* Active Subscription Card */}
-        <div className="flex flex-col justify-center items-center py-10 rounded-md bg-gradient-to-br from-indigo-600 to-pink-400 my-10">
-          <div className="max-w-4xl">
+        <div className="flex flex-col justify-center items-center py-6 sm:py-10 rounded-md bg-gradient-to-br from-indigo-600 to-pink-400 my-6 sm:my-10 px-4 sm:px-6">
+          <div className="w-full max-w-4xl">
             {activeSubscription && (
               <ActiveSubscriptionCard
                 subscription={activeSubscription}
@@ -283,13 +278,14 @@ const SubscriptionsPage = () => {
         </div>
 
         {/* Available Plans Section */}
-        <Box sx={{ mb: 4, textAlign: "center" }}>
+        <Box sx={{ mb: { xs: 2, sm: 4 }, textAlign: "center" }}>
           <Typography
             variant="h4"
             sx={{
               fontWeight: 700,
               color: "text.primary",
               mb: 1,
+              fontSize: { xs: "1.5rem", sm: "2.125rem" },
             }}
           >
             {activeSubscription ? "Available Plans" : "Choose Your Plan"}
@@ -302,7 +298,7 @@ const SubscriptionsPage = () => {
         </Box>
 
         {/* Plans Grid */}
-        <Grid container spacing={4} sx={{ mb: 8 }}>
+        <Grid container spacing={{ xs: 2, sm: 4 }} sx={{ mb: { xs: 4, sm: 8 } }} alignItems="stretch">
           {plans?.map((plan) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={plan.id}>
               <PlanCard

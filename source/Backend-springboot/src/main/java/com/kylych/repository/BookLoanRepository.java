@@ -103,7 +103,19 @@ SELECT bl FROM BookLoan bl WHERE bl.dueDate = :dueDate AND bl.status = :status
            "AND (bl.status = 'CHECKED_OUT' OR bl.status = 'OVERDUE')")
     boolean hasActiveCheckout(@Param("userId") Long userId, @Param("bookId") Long bookId);
 
+    /**
+     * Check if user has ever returned a specific book
+     */
+    @Query("SELECT CASE WHEN COUNT(bl) > 0 THEN true ELSE false END FROM BookLoan bl " +
+           "WHERE bl.user.id = :userId AND bl.book.id = :bookId " +
+           "AND bl.status = 'RETURNED'")
+    boolean hasReturnedLoan(@Param("userId") Long userId, @Param("bookId") Long bookId);
 
+    /**
+     * Find all loans for a user and book (for history display)
+     */
+    @Query("SELECT bl FROM BookLoan bl WHERE bl.user.id = :userId AND bl.book.id = :bookId ORDER BY bl.createdAt DESC")
+    List<BookLoan> findByUserIdAndBookId(@Param("userId") Long userId, @Param("bookId") Long bookId);
 
     /**
      * Find book loans by date range

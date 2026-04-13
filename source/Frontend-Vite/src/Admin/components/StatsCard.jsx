@@ -36,9 +36,9 @@ export default function StatsCard({
         },
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <Box sx={{ flex: 1 }}>
+      <CardContent sx={{ p: { xs: '12px !important', sm: '16px !important' } }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               variant="body2"
               sx={{
@@ -46,17 +46,18 @@ export default function StatsCard({
                 fontWeight: 500,
                 textTransform: 'uppercase',
                 letterSpacing: 1,
-                fontSize: '0.75rem',
-                mb: 1,
+                fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                mb: 0.5,
               }}
             >
               {title}
             </Typography>
             <Typography
-              variant="h4"
               sx={{
                 fontWeight: 700,
                 mb: 0.5,
+                fontSize: { xs: '1.4rem', sm: '2rem' },
+                lineHeight: 1.2,
               }}
             >
               {loading ? '...' : value}
@@ -67,6 +68,7 @@ export default function StatsCard({
                 sx={{
                   opacity: 0.8,
                   display: 'block',
+                  fontSize: { xs: '0.65rem', sm: '0.75rem' },
                 }}
               >
                 {subtitle}
@@ -77,11 +79,12 @@ export default function StatsCard({
           <Avatar
             sx={{
               bgcolor: 'rgba(255,255,255,0.25)',
-              width: 56,
-              height: 56,
+              width: { xs: 40, sm: 52 },
+              height: { xs: 40, sm: 52 },
+              flexShrink: 0,
             }}
           >
-            <Icon sx={{ fontSize: 30 }} />
+            <Icon sx={{ fontSize: { xs: 22, sm: 28 } }} />
           </Avatar>
         </Box>
 

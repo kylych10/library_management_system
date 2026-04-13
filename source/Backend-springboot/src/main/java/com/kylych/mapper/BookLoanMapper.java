@@ -1,12 +1,17 @@
 package com.kylych.mapper;
 
+import com.kylych.domain.FineStatus;
 import com.kylych.modal.BookLoan;
+import com.kylych.modal.Fine;
 
 import com.kylych.payload.dto.BookLoanDTO;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Mapper for converting between BookLoan entity and BookLoanDTO
@@ -61,6 +66,21 @@ public class BookLoanMapper {
         dto.setOverdueDays(bookLoan.getOverdueDays());
         dto.setCreatedAt(bookLoan.getCreatedAt());
         dto.setUpdatedAt(bookLoan.getUpdatedAt());
+
+        // Populate fine info from associated Fine records
+        List<Fine> fines = bookLoan.getFines();
+        if (fines != null && !fines.isEmpty()) {
+            // Pick the most recent non-waived fine
+            Fine activeFine = fines.stream()
+                    .filter(f -> f.getStatus() != FineStatus.WAIVED)
+                    .max(Comparator.comparing(f -> f.getCreatedAt() != null ? f.getCreatedAt() : java.time.LocalDateTime.MIN))
+                    .orElse(null);
+            if (activeFine != null) {
+                dto.setFineId(activeFine.getId());
+                dto.setFineAmount(BigDecimal.valueOf(activeFine.getAmount()));
+                dto.setFinePaid(activeFine.getStatus() == FineStatus.PAID);
+            }
+        }
 
         return dto;
     }

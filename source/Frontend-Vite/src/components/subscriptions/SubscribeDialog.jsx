@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import PaymentIcon from '@mui/icons-material/Payment';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import { getDurationText } from '../../utils/getDuration';
@@ -93,7 +93,7 @@ const SubscribeDialog = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isUpgrade && <TrendingUpIcon sx={{ color: planColor }} />}
-            {!isUpgrade && <PaymentIcon sx={{ color: planColor }} />}
+            {!isUpgrade && <WorkspacePremiumIcon sx={{ color: planColor }} />}
             <Typography variant="h6" className="font-bold">
               {isUpgrade ? 'Upgrade Plan' : isSwitchPlan ? 'Switch Plan' : 'Subscribe to Plan'}
             </Typography>
@@ -227,7 +227,7 @@ const SubscribeDialog = ({
         {/* Terms Notice */}
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="caption">
-            Your subscription will be activated instantly. You can cancel anytime from this page.
+            Your subscription will be activated instantly with no payment required. You can cancel or switch plans anytime.
           </Typography>
         </Alert>
       </DialogContent>
@@ -248,7 +248,7 @@ const SubscribeDialog = ({
           onClick={handleConfirm}
           variant="contained"
           disabled={loading || !plan}
-          startIcon={isUpgrade ? <TrendingUpIcon /> : <PaymentIcon />}
+          startIcon={isUpgrade ? <TrendingUpIcon /> : <WorkspacePremiumIcon />}
           sx={{
             bgcolor: planColor,
             color: 'white',
@@ -261,12 +261,12 @@ const SubscribeDialog = ({
           }}
         >
           {loading
-            ? 'Processing...'
+            ? 'Activating...'
             : isUpgrade
             ? 'Upgrade Now'
             : isSwitchPlan
             ? 'Switch Plan'
-            : 'Subscribe Now'}
+            : 'Activate Now'}
         </Button>
       </DialogActions>
     </Dialog>

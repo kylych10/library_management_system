@@ -69,16 +69,19 @@ const notificationSlice = createSlice({
       .addCase(markNotificationAsRead.fulfilled, (state, action) => {
         const updatedNotification = action.payload;
 
-        // Update in notifications list
+        // Check if it WAS unread before updating
         const notificationIndex = state.notifications.findIndex(
           (n) => n.id === updatedNotification.id
         );
+        const wasUnread = notificationIndex !== -1 && !state.notifications[notificationIndex].isRead;
+
+        // Update in notifications list
         if (notificationIndex !== -1) {
           state.notifications[notificationIndex] = updatedNotification;
         }
 
-        // Decrement unread count if it was unread
-        if (!updatedNotification.isRead && state.unreadCount > 0) {
+        // Decrement unread count only if it was unread before
+        if (wasUnread && state.unreadCount > 0) {
           state.unreadCount -= 1;
         }
 

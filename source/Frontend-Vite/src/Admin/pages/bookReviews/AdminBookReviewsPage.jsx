@@ -144,22 +144,20 @@ export default function AdminBookReviewsPage() {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            Book Reviews Management
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Monitor and moderate customer reviews
-          </Typography>
-        </Box>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
+          Book Reviews Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Monitor and moderate customer reviews
+        </Typography>
       </Box>
 
       {/* Stats Summary */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'primary.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {myReviews?.length || 0}
             </Typography>
             <Typography variant="body2">Total Reviews</Typography>
@@ -167,7 +165,7 @@ export default function AdminBookReviewsPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'success.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {myReviews?.filter((r) => r.verifiedReader).length || 0}
             </Typography>
             <Typography variant="body2">Verified Readers</Typography>
@@ -175,7 +173,7 @@ export default function AdminBookReviewsPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.lighter' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+            <Typography sx={{ fontWeight: 700, color: 'warning.main', fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               {myReviews?.length > 0
                 ? (
                     myReviews.reduce((sum, r) => sum + r.rating, 0) / myReviews.length

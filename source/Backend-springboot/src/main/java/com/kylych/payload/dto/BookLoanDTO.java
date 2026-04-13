@@ -35,6 +35,7 @@ public class BookLoanDTO {
     private LocalDate returnDate;
     private Integer renewalCount;
     private Integer maxRenewals;
+    private Long fineId;
     private BigDecimal fineAmount;
     private Boolean finePaid;
     private String notes;

@@ -250,8 +250,8 @@ export default function AdminDashboard() {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+      <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.4rem', sm: '2.125rem' } }}>
           Dashboard Overview
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 1.5, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
             title="Total Books"
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
       </Grid>
 
       {/* Secondary Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 1.5, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card
             sx={{
@@ -311,30 +311,18 @@ export default function AdminDashboard() {
               height: "100%",
             }}
           >
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
+            <CardContent sx={{ p: { xs: '12px !important', sm: '16px !important' } }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {stats.activeSubscriptions}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Active Subscriptions
                   </Typography>
                 </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.25)",
-                    width: 56,
-                    height: 56,
-                  }}
-                >
-                  <CardMembership sx={{ fontSize: 30 }} />
+                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: { xs: 44, sm: 56 }, height: { xs: 44, sm: 56 }, flexShrink: 0 }}>
+                  <CardMembership sx={{ fontSize: { xs: 22, sm: 30 } }} />
                 </Avatar>
               </Box>
             </CardContent>
@@ -348,30 +336,18 @@ export default function AdminDashboard() {
               height: "100%",
             }}
           >
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
+            <CardContent sx={{ p: { xs: '12px !important', sm: '16px !important' } }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {stats.pendingReservations}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Pending Reservations
                   </Typography>
                 </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.25)",
-                    width: 56,
-                    height: 56,
-                  }}
-                >
-                  <BookmarkAdded sx={{ fontSize: 30 }} />
+                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: { xs: 44, sm: 56 }, height: { xs: 44, sm: 56 }, flexShrink: 0 }}>
+                  <BookmarkAdded sx={{ fontSize: { xs: 22, sm: 30 } }} />
                 </Avatar>
               </Box>
             </CardContent>
@@ -385,30 +361,18 @@ export default function AdminDashboard() {
               height: "100%",
             }}
           >
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
+            <CardContent sx={{ p: { xs: '12px !important', sm: '16px !important' } }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
                 <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
                     {stats.totalReviews}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Total Reviews
                   </Typography>
                 </Box>
-                <Avatar
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.25)",
-                    width: 56,
-                    height: 56,
-                  }}
-                >
-                  <RateReview sx={{ fontSize: 30 }} />
+                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.25)", width: { xs: 44, sm: 56 }, height: { xs: 44, sm: 56 }, flexShrink: 0 }}>
+                  <RateReview sx={{ fontSize: { xs: 22, sm: 30 } }} />
                 </Avatar>
               </Box>
             </CardContent>
@@ -417,11 +381,11 @@ export default function AdminDashboard() {
       </Grid>
 
       {/* Recent Activities */}
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 1.5, sm: 3 }}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               borderRadius: 2,
             }}
@@ -431,39 +395,44 @@ export default function AdminDashboard() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                mb: 3,
+                mb: { xs: 2, sm: 3 },
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Recent Activities
               </Typography>
               <Chip label="Live" color="success" size="small" />
             </Box>
-            <List>
+            <List disablePadding>
               {recentActivities.length > 0 ? (
                 recentActivities.map((activity) => (
                   <ListItem
                     key={activity.id}
+                    disablePadding
                     sx={{
                       borderRadius: 2,
-                      mb: 1,
+                      mb: 0.5,
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 0.75, sm: 1 },
                       "&:hover": {
                         bgcolor: (theme) =>
                           alpha(theme.palette.primary.main, 0.04),
                       },
                     }}
                   >
-                    <ListItemAvatar>
+                    <ListItemAvatar sx={{ minWidth: { xs: 44, sm: 56 } }}>
                       <Avatar
                         sx={{
+                          width: { xs: 32, sm: 40 },
+                          height: { xs: 32, sm: 40 },
                           bgcolor: (theme) =>
                             alpha(
-                              theme.palette[getActivityColor(activity.type)]
-                                .main,
+                              theme.palette[getActivityColor(activity.type)].main,
                               0.1
                             ),
                           color: (theme) =>
                             theme.palette[getActivityColor(activity.type)].main,
+                          '& svg': { fontSize: { xs: 16, sm: 20 } },
                         }}
                       >
                         {getActivityIcon(activity.type)}
@@ -471,18 +440,22 @@ export default function AdminDashboard() {
                     </ListItemAvatar>
                     <ListItemText
                       primary={
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
                           <strong>{activity.user}</strong> {activity.action}{" "}
                           <strong>{activity.book}</strong>
                         </Typography>
                       }
-                      secondary={activity.time}
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {activity.time}
+                        </Typography>
+                      }
                     />
                     <Chip
                       label={activity.type}
                       size="small"
                       color={getActivityColor(activity.type)}
-                      sx={{ textTransform: "capitalize" }}
+                      sx={{ textTransform: "capitalize", display: { xs: 'none', sm: 'flex' } }}
                     />
                   </ListItem>
                 ))
@@ -501,13 +474,13 @@ export default function AdminDashboard() {
         <Grid size={{ xs: 12, lg: 4 }}>
           <Paper
             sx={{
-              p: 3,
+              p: { xs: 2, sm: 3 },
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               borderRadius: 2,
               height: "100%",
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: { xs: 2, sm: 3 }, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               Quick Stats
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

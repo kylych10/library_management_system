@@ -80,7 +80,8 @@ const ActiveSubscriptionCard = ({ subscription, onRenew, onCancel, loading = fal
   }
 
   const planColors = getPlanColor();
-  const showRenewButton = subscriptionStatus?.isExpiringSoon || subscriptionStatus?.isExpired;
+  // Always allow renew (re-subscribes to same plan fresh)
+  const showRenewButton = true;
   const showCancelButton = subscriptionStatus?.isActive && !subscription.cancelledAt;
 
   // Get status badge

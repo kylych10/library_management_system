@@ -142,6 +142,23 @@ public class BookLoanController {
      * @param page Page number
      * @param size Page size
      */
+    /**
+     * Get my loan history for a specific book
+     * GET /api/book-loans/my/book/{bookId}
+     */
+    @GetMapping("/my/book/{bookId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getMyLoansForBook(@PathVariable Long bookId) {
+        try {
+            java.util.List<BookLoanDTO> loans = bookLoanService.getMyLoansForBook(bookId);
+            return ResponseEntity.ok(loans);
+        } catch (Exception e) {
+            log.error("Failed to fetch loans for book: {}", bookId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse("Failed to fetch loan history", false));
+        }
+    }
+
     @GetMapping("/my")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> getMyBookLoans(

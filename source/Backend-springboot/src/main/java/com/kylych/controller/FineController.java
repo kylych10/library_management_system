@@ -87,6 +87,24 @@ public class FineController {
         }
     }
 
+    /**
+     * Pay a fine directly without payment gateway
+     * POST /api/fines/{id}/pay-direct
+     */
+    @PostMapping("/{id}/pay-direct")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<?> payFineDirectly(@PathVariable Long id) {
+        try {
+            log.info("Admin direct payment for fine: {}", id);
+            FineDTO fine = fineService.markFineAsPaidDirect(id);
+            return ResponseEntity.ok(fine);
+        } catch (FineException e) {
+            log.error("Direct payment failed for fine: {}", id, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse(e.getMessage(), false));
+        }
+    }
+
     // ==================== WAIVER OPERATIONS ====================
 
     /**

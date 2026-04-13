@@ -16,6 +16,8 @@ public class UserDTO {
     private String fullName;
     private UserRole role;
     private String username;
-
+    private String profileImage;
+    private Boolean verified;
+    private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
 }

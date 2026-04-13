@@ -11,6 +11,7 @@ import com.kylych.payload.request.CheckinRequest;
 import com.kylych.payload.request.CheckoutRequest;
 import com.kylych.payload.request.RenewalRequest;
 import com.kylych.payload.response.PageResponse;
+import java.util.List;
 
 /**
  * Service interface for book loan operations (checkout/check-in). Handles book
@@ -139,4 +140,12 @@ public interface BookLoanService {
      * @return Statistics object
      */
     CheckoutStatistics getCheckoutStatistics();
+
+    /**
+     * Get current user's loan history for a specific book
+     *
+     * @param bookId Book ID
+     * @return List of book loans for this book by the current user
+     */
+    List<BookLoanDTO> getMyLoansForBook(Long bookId);
 }

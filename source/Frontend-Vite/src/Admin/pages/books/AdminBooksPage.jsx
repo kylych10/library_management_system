@@ -7,18 +7,24 @@ import {
   InputAdornment,
   MenuItem,
   Paper,
-
   FormControl,
   InputLabel,
   Select,
   Grid,
-
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Divider,
+  IconButton,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
   Sort as SortIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "../../components/DataTable";
@@ -52,6 +58,9 @@ export default function AdminBooksPage() {
   // UI State
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [feedback, setFeedback] = useState({ open: false, message: "", severity: "success" });
+  const showFeedback = (message, severity = "success") => setFeedback({ open: true, message, severity });
 
   // Debounce timer for search
   const [searchDebounce, setSearchDebounce] = useState(null);
@@ -181,14 +190,17 @@ export default function AdminBooksPage() {
 
 
 
-  const handleDelete = async (book) => {
-    if (window.confirm(`Are you sure you want to delete "${book.title}"?`)) {
-      try {
-        await dispatch(deleteBook(book.id)).unwrap();
-        loadBooks();
-      } catch (error) {
-        console.error("Error deleting book:", error);
-      }
+  const handleDelete = (book) => setDeleteTarget(book);
+
+  const handleConfirmDelete = async () => {
+    try {
+      await dispatch(deleteBook(deleteTarget.id)).unwrap();
+      setDeleteTarget(null);
+      showFeedback(`"${deleteTarget.title}" deleted successfully.`, "success");
+      loadBooks();
+    } catch (err) {
+      setDeleteTarget(null);
+      showFeedback(err?.message || err || "Failed to delete book.", "error");
     }
   };
 
@@ -200,13 +212,15 @@ export default function AdminBooksPage() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 1.5, sm: 0 },
           mb: 3,
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
             Books Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -222,6 +236,7 @@ export default function AdminBooksPage() {
             "&:hover": {
               background: "linear-gradient(45deg, #5568d3 30%, #6a4292 90%)",
             },
+            alignSelf: { xs: 'stretch', sm: 'auto' },
           }}
         >
           Add New Book
@@ -407,6 +422,35 @@ export default function AdminBooksPage() {
         setDialogOpen={setDialogOpen}
         book={editingBook}
       />
+
+      {/* Delete Confirm */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          Delete Book
+          <IconButton size="small" onClick={() => setDeleteTarget(null)}><CloseIcon fontSize="small" /></IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: 2 }}>
+          <Alert severity="error">
+            Permanently delete <strong>"{deleteTarget?.title}"</strong>? This cannot be undone.
+          </Alert>
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => setDeleteTarget(null)} variant="outlined">Cancel</Button>
+          <Button onClick={handleConfirmDelete} variant="contained" color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Feedback */}
+      <Dialog open={feedback.open} onClose={() => setFeedback({ ...feedback, open: false })} maxWidth="xs" fullWidth>
+        <DialogContent sx={{ pt: 3 }}>
+          <Alert severity={feedback.severity}>{feedback.message}</Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="contained" onClick={() => setFeedback({ ...feedback, open: false })}>OK</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

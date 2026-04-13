@@ -130,3 +130,40 @@ export const toggleUserVerification = createAsyncThunk(
         }
     }
 );
+
+/**
+ * Update current user's profile (fullName, phone, profileImage)
+ * PUT /api/users/profile
+ */
+export const updateProfile = createAsyncThunk(
+    'auth/updateProfile',
+    async (profileData, { rejectWithValue }) => {
+        try {
+            const response = await api.put('/api/users/profile', profileData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+        }
+    }
+);
+
+/**
+ * Upload profile picture — converts File to base64 then calls updateProfile endpoint
+ */
+export const uploadProfileImage = createAsyncThunk(
+    'auth/uploadProfileImage',
+    async (file, { rejectWithValue }) => {
+        try {
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            const response = await api.put('/api/users/profile', { profileImage: base64 });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to upload image');
+        }
+    }
+);

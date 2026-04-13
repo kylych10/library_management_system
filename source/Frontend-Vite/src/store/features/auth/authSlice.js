@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { login, signup, fetchCurrentUser, forgotPassword, resetPassword, getUsersList } from './authThunk';
+import { login, signup, fetchCurrentUser, forgotPassword, resetPassword, getUsersList, updateProfile, uploadProfileImage } from './authThunk';
 
 const initialState = {
   user: null,
@@ -9,6 +9,8 @@ const initialState = {
   error: null,
   forgotPasswordSuccess: false,
   resetPasswordSuccess: false,
+  profileUpdateLoading: false,
+  profileUpdateError: null,
   // Users list for admin
   usersList: [],
   usersListLoading: false,
@@ -137,6 +139,32 @@ const authSlice = createSlice({
       .addCase(getUsersList.rejected, (state, action) => {
         state.usersListLoading = false;
         state.usersListError = action.payload;
+      })
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.profileUpdateLoading = true;
+        state.profileUpdateError = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.profileUpdateLoading = false;
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.profileUpdateLoading = false;
+        state.profileUpdateError = action.payload;
+      })
+      // Upload Profile Image
+      .addCase(uploadProfileImage.pending, (state) => {
+        state.profileUpdateLoading = true;
+        state.profileUpdateError = null;
+      })
+      .addCase(uploadProfileImage.fulfilled, (state, action) => {
+        state.profileUpdateLoading = false;
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(uploadProfileImage.rejected, (state, action) => {
+        state.profileUpdateLoading = false;
+        state.profileUpdateError = action.payload;
       });
   },
 });

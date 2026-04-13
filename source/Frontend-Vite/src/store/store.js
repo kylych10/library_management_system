@@ -11,6 +11,8 @@ import wishlistReducer from './features/wishlist/wishlistSlice';
 import reservationReducer from './features/reservations/reservationSlice';
 import notificationReducer from './features/notification/notificationSlice';
 import fineReducer from './features/fines/fineSlice';
+import friendReducer from './features/friends/friendSlice';
+import messageReducer from './features/messages/messageSlice';
 
 /**
  * Redux store configuration for Library Management System
@@ -30,6 +32,8 @@ export const store = configureStore({
     reservations: reservationReducer,
     notification: notificationReducer,
     fines: fineReducer,
+    friends: friendReducer,
+    messages: messageReducer,
   },
 
 });

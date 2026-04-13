@@ -111,19 +111,18 @@ export const getBookLoanById = createAsyncThunk(
  */
 export const fetchMyBookLoans = createAsyncThunk(
   'bookLoans/fetchMyBookLoans',
-  async ({ status = false, page = 0, size = 20 }, { rejectWithValue }) => {
+  async ({ status = null, page = 0, size = 20 }, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         size: size.toString(),
       });
-      if (status !== null) {
-        params.append('status', status.toString());
+      if (status) {
+        params.append('status', status);
       }
       const response = await api.get(`${API_URL}/my?${params}`, {
         headers: getHeaders(),
       });
-      console.log('Fetched my book loans:', response.data);
       return { data: response.data, status };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch book loans');
@@ -157,6 +156,24 @@ export const getUserBookLoans = createAsyncThunk(
 );
 
 
+
+/**
+ * Get current user's loan history for a specific book
+ * GET /api/book-loans/my/book/{bookId}
+ */
+export const fetchMyLoansForBook = createAsyncThunk(
+  'bookLoans/fetchMyLoansForBook',
+  async (bookId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`${API_URL}/my/book/${bookId}`, {
+        headers: getHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch loan history');
+    }
+  }
+);
 
 /**
  * Search book loans with filters (Admin only)

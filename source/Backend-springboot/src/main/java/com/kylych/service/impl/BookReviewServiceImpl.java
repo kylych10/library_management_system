@@ -296,13 +296,7 @@ public class BookReviewServiceImpl implements BookReviewService {
      * Check if user has read the book (completed at least one loan with RETURNED status)
      */
     private boolean hasUserReadBook(Long userId, Long bookId) {
-        Pageable pageable = PageRequest.of(0, 1);
-        Page<BookLoan> bookLoans = bookLoanRepository.findByBookId(bookId, 
-        pageable);
-
-        return bookLoans.stream()
-                .anyMatch(loan -> loan.getUser().getId().equals(userId)
-                        && loan.getStatus() == BookLoanStatus.RETURNED);
+        return bookLoanRepository.hasReturnedLoan(userId, bookId);
     }
 
     private User getCurrentAuthenticatedUser() {

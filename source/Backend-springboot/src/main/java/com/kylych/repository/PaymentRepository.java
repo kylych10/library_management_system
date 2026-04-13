@@ -33,6 +33,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      */
     List<Payment> findByUserIdAndPaymentTypeAndStatusIn(Long userId, PaymentType paymentType, List<PaymentStatus> statuses);
 
+    /**
+     * Find all payments linked to a specific fine
+     */
+    List<Payment> findByFineId(Long fineId);
+
 
 
 

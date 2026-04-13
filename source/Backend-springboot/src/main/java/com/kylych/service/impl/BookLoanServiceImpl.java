@@ -2,12 +2,15 @@ package com.kylych.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,11 +34,17 @@ import com.kylych.payload.request.CheckinRequest;
 import com.kylych.payload.request.CheckoutRequest;
 import com.kylych.payload.request.RenewalRequest;
 import com.kylych.payload.response.PageResponse;
+import com.kylych.domain.FineStatus;
+import com.kylych.domain.FineType;
+import com.kylych.modal.Fine;
 import com.kylych.repository.BookLoanRepository;
 import com.kylych.repository.BookRepository;
+import com.kylych.repository.FineRepository;
 import com.kylych.repository.UserRepository;
+import com.kylych.domain.NotificationType;
 import com.kylych.service.BookLoanService;
 import com.kylych.service.FineCalculationService;
+import com.kylych.service.NotificationService;
 import com.kylych.service.ReservationService;
 import com.kylych.service.SubscriptionService;
 
@@ -57,19 +66,17 @@ public class BookLoanServiceImpl implements BookLoanService {
     private final BookLoanMapper bookLoanMapper;
     private final FineCalculationService fineCalculationService;
     private final SubscriptionService subscriptionService;
+    private final FineRepository fineRepository;
 
-    private ReservationService reservationService; // Lazy injection to avoid circular dependency
+    @Autowired @Lazy
+    private NotificationService notificationService;
+
+    @Autowired @Lazy
+    private ReservationService reservationService;
 
     // Business rules constants - now overridden by subscription limits
     private static final int MAX_ACTIVE_CHECKOUTS = 5;
     private static final int DEFAULT_CHECKOUT_DAYS = 14;
-
-
-
-    // Setter injection for ReservationService to avoid circular dependency
-    public void setReservationService(ReservationService reservationService) {
-        this.reservationService = reservationService;
-    }
 
     // ==================== CHECKOUT OPERATIONS ====================
 
@@ -167,6 +174,19 @@ public class BookLoanServiceImpl implements BookLoanService {
         // 10. Save book loan
         BookLoan savedBookLoan = bookLoanRepository.save(bookLoan);
 
+        // Notify user about checkout
+        try {
+            notificationService.createNotification(
+                    user,
+                    "Book Checked Out",
+                    "You have successfully checked out \"" + book.getTitle() + "\". Due date: " + savedBookLoan.getDueDate(),
+                    NotificationType.BOOK_REMINDER,
+                    savedBookLoan.getId()
+            );
+        } catch (Exception e) {
+            // Notification failure must not block checkout
+        }
+
         return bookLoanMapper.toDTO(savedBookLoan);
     }
 
@@ -240,6 +260,20 @@ public class BookLoanServiceImpl implements BookLoanService {
         // 8. Save book loan
         BookLoan savedBookLoan = bookLoanRepository.save(bookLoan);
 
+        // Notify user about return
+        try {
+            String bookTitle = savedBookLoan.getBook() != null ? savedBookLoan.getBook().getTitle() : "Unknown Book";
+            notificationService.createNotification(
+                    savedBookLoan.getUser(),
+                    "Book Returned",
+                    "\"" + bookTitle + "\" has been successfully returned. Thank you!",
+                    NotificationType.BOOK_RETURNED,
+                    savedBookLoan.getId()
+            );
+        } catch (Exception e) {
+            // Notification failure must not block check-in
+        }
+
         return bookLoanMapper.toDTO(savedBookLoan);
     }
 
@@ -282,6 +316,20 @@ public class BookLoanServiceImpl implements BookLoanService {
 
         // 6. Save book loan
         BookLoan savedBookLoan = bookLoanRepository.save(bookLoan);
+
+        // Notify user about renewal
+        try {
+            String bookTitle = savedBookLoan.getBook() != null ? savedBookLoan.getBook().getTitle() : "Unknown Book";
+            notificationService.createNotification(
+                    savedBookLoan.getUser(),
+                    "Book Renewal Confirmed",
+                    "\"" + bookTitle + "\" has been renewed. New due date: " + savedBookLoan.getDueDate(),
+                    NotificationType.BOOK_REMINDER,
+                    savedBookLoan.getId()
+            );
+        } catch (Exception e) {
+            // Notification failure must not block renewal
+        }
 
         return bookLoanMapper.toDTO(savedBookLoan);
     }
@@ -385,7 +433,10 @@ public class BookLoanServiceImpl implements BookLoanService {
         BookLoan bookLoan = bookLoanRepository.findById(bookLoanId)
                 .orElseThrow(() -> new BookLoanException("Book loan not found with id: " + bookLoanId));
 
-        // 2. Update fields if provided (null values are ignored)
+        // 2. Capture previous status before any update
+        BookLoanStatus previousStatus = bookLoan.getStatus();
+
+        // 3. Update fields if provided (null values are ignored)
         if (updateRequest.getStatus() != null) {
             bookLoan.setStatus(updateRequest.getStatus());
         }
@@ -402,14 +453,120 @@ public class BookLoanServiceImpl implements BookLoanService {
             bookLoan.setMaxRenewals(updateRequest.getMaxRenewals());
         }
 
-
-
         if (updateRequest.getNotes() != null) {
             String existingNotes = bookLoan.getNotes() != null ? bookLoan.getNotes() + "\n" : "";
             bookLoan.setNotes(existingNotes + "Admin update: " + updateRequest.getNotes());
         }
 
-        // 3. Save and return
+        // ── Step A: sync fine type whenever status changes ──────────────────────
+        if (updateRequest.getStatus() != null) {
+            FineType derivedType;
+            if (updateRequest.getStatus() == BookLoanStatus.LOST) {
+                derivedType = FineType.LOSS;
+            } else if (updateRequest.getStatus() == BookLoanStatus.DAMAGED) {
+                derivedType = FineType.DAMAGE;
+            } else {
+                derivedType = FineType.OVERDUE;
+            }
+
+            fineRepository.findByBookLoanId(bookLoan.getId()).stream()
+                    .filter(f -> f.getStatus() != FineStatus.WAIVED)
+                    .findFirst()
+                    .ifPresent(f -> {
+                        f.setType(derivedType);
+                        f.setUpdatedAt(LocalDateTime.now());
+                        fineRepository.save(f);
+                    });
+        }
+
+        // ── Step B: upsert fine amount/paid status when fineAmount is provided ─
+        if (updateRequest.getFineAmount() != null && updateRequest.getFineAmount().compareTo(BigDecimal.ZERO) > 0) {
+            long fineAmountLong = updateRequest.getFineAmount().longValue();
+            boolean finePaid = updateRequest.getFinePaid() != null && updateRequest.getFinePaid();
+
+            Fine fine = fineRepository.findByBookLoanId(bookLoan.getId()).stream()
+                    .filter(f -> f.getStatus() != FineStatus.WAIVED)
+                    .findFirst()
+                    .orElse(null);
+
+            if (fine == null) {
+                // No fine yet — derive type from current loan status
+                FineType newType = FineType.OVERDUE;
+                BookLoanStatus s = updateRequest.getStatus() != null ? updateRequest.getStatus() : bookLoan.getStatus();
+                if (s == BookLoanStatus.LOST)    newType = FineType.LOSS;
+                else if (s == BookLoanStatus.DAMAGED) newType = FineType.DAMAGE;
+
+                fine = Fine.builder()
+                        .bookLoan(bookLoan)
+                        .user(bookLoan.getUser())
+                        .type(newType)
+                        .amount(fineAmountLong)
+                        .amountPaid(0L)
+                        .status(FineStatus.PENDING)
+                        .reason("Fine added by admin")
+                        .build();
+            } else {
+                fine.setAmount(fineAmountLong);
+            }
+
+            if (finePaid) {
+                fine.setAmountPaid(fineAmountLong);
+                fine.setStatus(FineStatus.PAID);
+                fine.setTransactionId("ADMIN_DIRECT_LOAN_" + bookLoan.getId());
+            } else {
+                fine.setAmountPaid(0L);
+                fine.setStatus(FineStatus.PENDING);
+                fine.setTransactionId(null);
+            }
+            fine.setUpdatedAt(LocalDateTime.now());
+            Fine savedFine = fineRepository.save(fine);
+
+            // Notify user about fine update from loan management
+            try {
+                String bookTitle = bookLoan.getBook() != null ? bookLoan.getBook().getTitle() : "Unknown Book";
+                String amountStr = String.format("$%.2f", fineAmountLong / 100.0);
+                String msg = finePaid
+                        ? "A fine of " + amountStr + " for \"" + bookTitle + "\" has been marked as paid by admin."
+                        : "A fine of " + amountStr + " has been added to your account for \"" + bookTitle + "\". Please pay at your earliest convenience.";
+                notificationService.createNotification(
+                        bookLoan.getUser(),
+                        finePaid ? "Fine Cleared" : "Fine Added to Your Account",
+                        msg,
+                        NotificationType.FINE_NOTIFICATION,
+                        savedFine.getId()
+                );
+            } catch (Exception e) {
+                // Notification failure must not block loan update
+            }
+        }
+
+        // ── Step C: adjust available copies based on status transition ───────────
+        if (updateRequest.getStatus() != null && updateRequest.getStatus() != previousStatus) {
+            Book book = bookLoan.getBook();
+            boolean wasActive = previousStatus == BookLoanStatus.CHECKED_OUT
+                    || previousStatus == BookLoanStatus.OVERDUE;
+            boolean nowActive = updateRequest.getStatus() == BookLoanStatus.CHECKED_OUT
+                    || updateRequest.getStatus() == BookLoanStatus.OVERDUE;
+            boolean nowClosed = updateRequest.getStatus() == BookLoanStatus.RETURNED
+                    || updateRequest.getStatus() == BookLoanStatus.DAMAGED;
+            boolean nowLost = updateRequest.getStatus() == BookLoanStatus.LOST;
+
+            if (wasActive && nowClosed) {
+                // Book physically returned — increment copies
+                book.setAvailableCopies(Math.min(book.getAvailableCopies() + 1, book.getTotalCopies()));
+                bookRepository.save(book);
+            } else if (wasActive && nowLost) {
+                // Book lost — also decrement totalCopies permanently
+                book.setTotalCopies(Math.max(0, book.getTotalCopies() - 1));
+                bookRepository.save(book);
+            } else if (!wasActive && nowActive) {
+                // Reopening a closed loan — decrement copies (admin correction)
+                book.setAvailableCopies(Math.max(0, book.getAvailableCopies() - 1));
+                bookRepository.save(book);
+            }
+        }
+
+        // 4. Save and return
         BookLoan savedBookLoan = bookLoanRepository.save(bookLoan);
         return bookLoanMapper.toDTO(savedBookLoan);
     }
@@ -433,9 +590,23 @@ public class BookLoanServiceImpl implements BookLoanService {
                 // Calculate fine
                 BigDecimal fine = fineCalculationService.calculateOverdueFine(bookLoan);
 
-
                 bookLoanRepository.save(bookLoan);
                 updateCount++;
+
+                // Notify user their book is now overdue
+                try {
+                    String bookTitle = bookLoan.getBook() != null ? bookLoan.getBook().getTitle() : "Unknown Book";
+                    String fineStr = String.format("$%.2f", fine.doubleValue() / 100.0);
+                    notificationService.createNotification(
+                            bookLoan.getUser(),
+                            "Book Overdue",
+                            "\"" + bookTitle + "\" is now overdue by " + overdueDays + " day(s). Accruing fine: " + fineStr + ". Please return it as soon as possible.",
+                            NotificationType.FINE_NOTIFICATION,
+                            bookLoan.getId()
+                    );
+                } catch (Exception e) {
+                    // Notification failure must not block scheduler
+                }
             }
         }
 
@@ -458,14 +629,28 @@ public class BookLoanServiceImpl implements BookLoanService {
                 BookLoanStatus.RETURNED, PageRequest.of(0, Integer.MAX_VALUE))
                 .getTotalElements();
 
+        Long totalUnpaidRaw = fineRepository.getTotalOutstandingFines();
+        BigDecimal totalUnpaidFines = totalUnpaidRaw != null
+                ? BigDecimal.valueOf(totalUnpaidRaw)
+                : BigDecimal.ZERO;
+
+        long transactionsWithFines = fineRepository.count();
+
         return new CheckoutStatistics(
                 totalCheckouts,
                 activeCheckouts,
                 overdueCheckouts,
                 totalReturns,
-               null,
-                0
+                totalUnpaidFines,
+                transactionsWithFines
         );
+    }
+
+    @Override
+    public List<BookLoanDTO> getMyLoansForBook(Long bookId) {
+        User currentUser = getCurrentAuthenticatedUser();
+        List<BookLoan> loans = bookLoanRepository.findByUserIdAndBookId(currentUser.getId(), bookId);
+        return loans.stream().map(bookLoanMapper::toDTO).collect(Collectors.toList());
     }
 
     // ==================== HELPER METHODS ====================

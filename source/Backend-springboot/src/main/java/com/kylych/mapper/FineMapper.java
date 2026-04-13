@@ -38,6 +38,7 @@ public class FineMapper {
         // Book loan information
         if (fine.getBookLoan() != null) {
             dto.setBookLoanId(fine.getBookLoan().getId());
+            dto.setBookLoanStatus(fine.getBookLoan().getStatus());
             if (fine.getBookLoan().getBook() != null) {
                 dto.setBookTitle(fine.getBookLoan().getBook().getTitle());
                 dto.setBookIsbn(fine.getBookLoan().getBook().getIsbn());

@@ -21,9 +21,9 @@ import EmptyState from "../../components/loans/EmptyState";
 import {
   fetchMyBookLoans,
   renewCheckout,
-  payFine,
   checkinBook,
 } from "../../store/features/bookLoans/bookLoanThunk";
+import { payFineDirect } from "../../store/features/fines/fineThunk";
 import { clearError } from "../../store/features/bookLoans/bookLoanSlice";
 import { tabs } from "./tabs";
 
@@ -87,7 +87,7 @@ const MyLoansPage = () => {
 
   const handleRenewLoan = async (loanId) => {
     try {
-      await dispatch(renewCheckout(loanId)).unwrap();
+      await dispatch(renewCheckout({ bookLoanId: loanId, extensionDays: 14 })).unwrap();
       showSnackbar("Book renewed successfully! Due date extended.", "success");
       loadLoans();
     } catch (err) {
@@ -101,11 +101,9 @@ const MyLoansPage = () => {
 
   const confirmPayment = async () => {
     try {
-      await dispatch(payFine(paymentDialog.loan.id)).unwrap();
+      await dispatch(payFineDirect(paymentDialog.loan.fineId)).unwrap();
       showSnackbar(
-        `Fine of $${paymentDialog.loan.fineAmount.toFixed(
-          2
-        )} paid successfully!`,
+        `Fine of $${parseFloat(paymentDialog.loan.fineAmount || 0).toFixed(2)} paid successfully!`,
         "success"
       );
       setPaymentDialog({ open: false, loan: null });
@@ -172,20 +170,17 @@ const MyLoansPage = () => {
 
   return (
     <>
-      <div
-        className="min-h-screen bg-gradient-to-br 
-      from-indigo-50 via-white to-purple-50 py-8"
-      >
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-6 sm:py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-8 animate-fade-in-up">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
-              <span className="text-5xl">📚</span>
+          <div className="mb-6 sm:mb-8 animate-fade-in-up">
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+              <span className="text-3xl sm:text-5xl">📚</span>
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 My Borrowed Books
               </span>
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-sm sm:text-lg text-gray-600">
               Manage your book loans, track due dates, and renew books
             </p>
           </div>
@@ -215,12 +210,16 @@ const MyLoansPage = () => {
                   setActiveTab(newValue);
                   setCurrentPage(1);
                 }}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
                   "& .MuiTab-root": {
                     textTransform: "none",
-                    fontSize: "1rem",
+                    fontSize: { xs: "0.8rem", sm: "1rem" },
                     fontWeight: 600,
-                    minWidth: 100,
+                    minWidth: { xs: 80, sm: 100 },
+                    px: { xs: 1.5, sm: 2 },
                   },
                   "& .Mui-selected": {
                     color: "#4F46E5",
@@ -318,7 +317,7 @@ const MyLoansPage = () => {
                     Fine Amount:
                   </span>
                   <span className="text-3xl font-bold text-red-600">
-                    ${paymentDialog.loan.fineAmount.toFixed(2)}
+                    ${parseFloat(paymentDialog.loan.fineAmount || 0).toFixed(2)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600">

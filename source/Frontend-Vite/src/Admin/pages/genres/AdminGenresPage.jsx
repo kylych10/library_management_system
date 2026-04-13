@@ -234,13 +234,15 @@ export default function AdminGenresPage() {
         <Box
             sx={{
               display: "flex",
+              flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: { xs: 1.5, sm: 0 },
               mb: 3,
             }}
         >
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.3rem', sm: '2.125rem' } }}>
               Genres Management
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -253,6 +255,7 @@ export default function AdminGenresPage() {
               onClick={() => handleOpenDialog()}
               sx={{
                 background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+                alignSelf: { xs: 'stretch', sm: 'auto' },
               }}
           >
             Add Genre

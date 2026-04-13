@@ -78,7 +78,7 @@ const FinePaymentDialog = ({
             </Paper>
 
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Payment will be processed securely. This action cannot be undone.
+              This action will mark your fine as paid. This cannot be undone.
             </Alert>
           </Box>
         )}

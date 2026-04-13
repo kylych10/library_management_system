@@ -146,8 +146,10 @@ const subscriptionSlice = createSlice({
         state.subscribeLoading = true;
         state.error = null;
       })
-      .addCase(renewSubscription.fulfilled, (state) => {
+      .addCase(renewSubscription.fulfilled, (state, action) => {
         state.subscribeLoading = false;
+        state.activeSubscription = action.payload;
+        state.hasValidSubscription = true;
       })
       .addCase(renewSubscription.rejected, (state, action) => {
         state.subscribeLoading = false;

@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import {
   createFine,
   payFine,
+  payFineDirect,
   waiveFine,
   getFineById,
   getFinesByBookLoan,
@@ -91,6 +92,31 @@ const fineSlice = createSlice({
         }
       })
       .addCase(payFine.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // ==================== PAY FINE DIRECT (Admin) ====================
+      .addCase(payFineDirect.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(payFineDirect.fulfilled, (state, action) => {
+        state.loading = false;
+        const updateFine = (list) => {
+          const index = list.findIndex((f) => f.id === action.payload.id);
+          if (index !== -1) {
+            list[index] = action.payload;
+          }
+        };
+        updateFine(state.allFines);
+        updateFine(state.myFines);
+        updateFine(state.bookLoanFines);
+        if (state.currentFine?.id === action.payload.id) {
+          state.currentFine = action.payload;
+        }
+      })
+      .addCase(payFineDirect.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

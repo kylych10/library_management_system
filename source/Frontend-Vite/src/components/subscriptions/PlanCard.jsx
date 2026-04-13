@@ -95,7 +95,7 @@ const PlanCard = ({ plan, onSubscribe, loading = false }) => {
         overflow: 'hidden',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         border: isFeatured ? `2px solid ${colors.primary}` : '1px solid rgba(0,0,0,0.08)',
-        transform: isFeatured ? 'scale(1.05)' : 'scale(1)',
+        transform: { xs: 'scale(1)', sm: isFeatured ? 'scale(1.05)' : 'scale(1)' },
         '&:hover': {
           transform: isCurrentPlan ? 'translateY(0)' : 'translateY(-8px)',
           boxShadow: isCurrentPlan ? 4 : 12,
@@ -232,7 +232,7 @@ const PlanCard = ({ plan, onSubscribe, loading = false }) => {
                 backgroundClip: 'text',
               }}
             >
-              ${(plan.priceInMajorUnits ?? plan.price / 100).toFixed(2)}
+              ${plan.priceInMajorUnits != null ? Number(plan.priceInMajorUnits).toFixed(2) : (plan.price / 100).toFixed(2)}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
               /{plan.durationDays === 365 ? 'year' : plan.durationDays === 30 ? 'mo' : `${plan.durationDays}d`}
@@ -384,7 +384,7 @@ const PlanCard = ({ plan, onSubscribe, loading = false }) => {
             }}
           >
             <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 600 }}>
-              💰 Save {plan.currency} {((plan.price - activeSubscription.subscriptionPlan.price) / 100).toFixed(2)} by upgrading!
+              💰 Upgrading gives you more books and longer loan periods!
             </Typography>
           </Box>
         )}

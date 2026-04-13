@@ -45,6 +45,7 @@ public class User {
 
     private String googleId;
 
+    @Column(columnDefinition = "TEXT")
     private String profileImage;
 
     @Column(nullable = false)

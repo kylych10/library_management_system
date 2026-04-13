@@ -31,7 +31,7 @@ import CheckoutDialog from "../components/books/CheckoutDialog";
 import ReservationDialog from "../components/books/ReservationDialog";
 
 import { fetchBookById, fetchBooks } from "../store/features/books/bookThunk";
-import { checkoutBook } from "../store/features/bookLoans/bookLoanThunk";
+import { checkoutBook, fetchMyLoansForBook } from "../store/features/bookLoans/bookLoanThunk";
 import {
   createReview,
   deleteReview,
@@ -98,6 +98,8 @@ const BookDetailsPage = () => {
   });
   const [userReview, setUserReview] = useState(null);
   const [hasRead, setHasRead] = useState(false);
+  const [loanHistory, setLoanHistory] = useState([]);
+  const [loanHistoryLoading, setLoanHistoryLoading] = useState(false);
 
   console.log("wishlistStatus -- ",wishlistStatus);
 
@@ -107,6 +109,7 @@ const BookDetailsPage = () => {
     loadRatingStats();
     checkUserReadStatus();
     loadUserReview();
+    loadLoanHistory();
   }, [id, dispatch]);
 
   // Load book details and related books from same genre
@@ -144,6 +147,18 @@ const BookDetailsPage = () => {
     } catch (err) {
       console.error("Failed to check read status:", err);
       setHasRead(false);
+    }
+  };
+
+  const loadLoanHistory = async () => {
+    setLoanHistoryLoading(true);
+    try {
+      const result = await dispatch(fetchMyLoansForBook(id)).unwrap();
+      setLoanHistory(result);
+    } catch (err) {
+      setLoanHistory([]);
+    } finally {
+      setLoanHistoryLoading(false);
     }
   };
 
@@ -961,21 +976,80 @@ const BookDetailsPage = () => {
               <div className="p-8">
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Loan History
+                    My Loan History
                   </h3>
                   <p className="text-gray-600">
-                    Recent borrowing activity for this book
+                    Your borrowing history for this book
                   </p>
                 </div>
 
-                <div className="text-center py-12">
-                  <LocalLibraryIcon
-                    sx={{ fontSize: 64, color: "#9CA3AF", mb: 2 }}
-                  />
-                  <p className="text-gray-600">
-                    Loan history is only visible to library staff
-                  </p>
-                </div>
+                {loanHistoryLoading ? (
+                  <div className="flex justify-center py-12">
+                    <CircularProgress sx={{ color: "#4F46E5" }} />
+                  </div>
+                ) : loanHistory && loanHistory.length > 0 ? (
+                  <div className="space-y-4">
+                    {loanHistory.map((loan) => {
+                      const statusColors = {
+                        CHECKED_OUT: { bg: "bg-blue-100", text: "text-blue-800", label: "Checked Out" },
+                        RETURNED: { bg: "bg-green-100", text: "text-green-800", label: "Returned" },
+                        OVERDUE: { bg: "bg-red-100", text: "text-red-800", label: "Overdue" },
+                        LOST: { bg: "bg-gray-100", text: "text-gray-800", label: "Lost" },
+                        DAMAGED: { bg: "bg-orange-100", text: "text-orange-800", label: "Damaged" },
+                      };
+                      const statusStyle = statusColors[loan.status] || { bg: "bg-gray-100", text: "text-gray-800", label: loan.status };
+                      return (
+                        <div key={loan.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                              {statusStyle.label}
+                            </span>
+                            <span className="text-sm text-gray-500">Loan #{loan.id}</span>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-500">Checkout Date</p>
+                              <p className="font-medium text-gray-900">
+                                {loan.checkoutDate ? new Date(loan.checkoutDate).toLocaleDateString() : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Due Date</p>
+                              <p className="font-medium text-gray-900">
+                                {loan.dueDate ? new Date(loan.dueDate).toLocaleDateString() : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Return Date</p>
+                              <p className="font-medium text-gray-900">
+                                {loan.returnDate ? new Date(loan.returnDate).toLocaleDateString() : "—"}
+                              </p>
+                            </div>
+                            {loan.renewalCount > 0 && (
+                              <div>
+                                <p className="text-gray-500">Renewals</p>
+                                <p className="font-medium text-gray-900">{loan.renewalCount}</p>
+                              </div>
+                            )}
+                            {loan.fineAmount > 0 && (
+                              <div>
+                                <p className="text-gray-500">Fine</p>
+                                <p className="font-medium text-red-600">${(loan.fineAmount / 100).toFixed(2)}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <LocalLibraryIcon sx={{ fontSize: 64, color: "#9CA3AF", mb: 2 }} />
+                    <p className="text-gray-600">
+                      You haven't borrowed this book yet.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

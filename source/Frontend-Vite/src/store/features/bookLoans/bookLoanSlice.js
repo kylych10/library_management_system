@@ -167,14 +167,10 @@ const bookLoanSlice = createSlice({
       })
       .addCase(fetchMyBookLoans.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.status === true) {
-          state.activeLoans = action.payload.data.content;
-        } else {
-          state.myLoans = action.payload.data.content;
-        }
-        state.totalElements = action.payload.data.totalElements;
-        state.totalPages = action.payload.data.totalPages;
-        state.currentPage = action.payload.data.number;
+        state.myLoans = action.payload.data.content || [];
+        state.totalElements = action.payload.data.totalElements || 0;
+        state.totalPages = action.payload.data.totalPages || 0;
+        state.currentPage = action.payload.data.number || 0;
       })
       .addCase(fetchMyBookLoans.rejected, (state, action) => {
         state.loading = false;

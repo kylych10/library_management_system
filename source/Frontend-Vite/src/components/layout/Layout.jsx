@@ -1,5 +1,6 @@
 import React from 'react';
 import AppNavbar from './AppNavbar';
+import ChatAssistant from '../chat/ChatAssistant';
 
 /**
  * Layout Component
@@ -11,10 +12,13 @@ import AppNavbar from './AppNavbar';
 const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
-      
+
       <main>
         {children}
       </main>
+
+      {/* AI Chat Assistant - visible on all pages */}
+      <ChatAssistant />
     </div>
   );
 };

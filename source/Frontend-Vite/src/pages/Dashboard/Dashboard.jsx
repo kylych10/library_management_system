@@ -53,7 +53,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(fetchMyBookLoans({ status: null, page: 0, size: 100 }));
-    dispatch(fetchMyBookLoans({ status: true, page: 0, size: 100 }));
+    dispatch(fetchMyBookLoans({ status: 'ACTIVE', page: 0, size: 100 }));
     dispatch(getMyReservations({ page: 0, size: 100 }));
   }, [auth.user]);
 
@@ -61,24 +61,23 @@ const Dashboard = () => {
   const statsData = statsConfig({ myLoans: activeLoans, reservations, booksRead, readingStreak: 0 });
   return (
   
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-500 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-500 py-6 sm:py-8 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-8 animate-fade-in-up">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <div className="mb-6 sm:mb-8 animate-fade-in-up">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
               My{" "}
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Dashboard
               </span>
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-base sm:text-lg text-gray-600">
               Track your reading journey and manage your library
             </p>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in-up animation-delay-200">
-            {/* Current Loans */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8 animate-fade-in-up animation-delay-200">
             {statsData.map((item) => (
               <StatsCard
                 key={item.id}
@@ -93,18 +92,18 @@ const Dashboard = () => {
           </div>
 
           {/* Reading Progress */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 animate-fade-in-up animation-delay-400">
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-6 sm:mb-8 animate-fade-in-up animation-delay-400">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
                   {currentYear} Reading Goal
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   {booksRead} of {READING_GOAL} books read
                 </p>
               </div>
-              <div className="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full">
-                <AutoAwesomeIcon sx={{ fontSize: 32, color: "#4F46E5" }} />
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full">
+                <AutoAwesomeIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: "#4F46E5" }} />
               </div>
             </div>
             <LinearProgress
@@ -132,11 +131,15 @@ const Dashboard = () => {
               <Tabs
                 value={activeTab}
                 onChange={(e, newValue) => setActiveTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
                   "& .MuiTab-root": {
                     textTransform: "none",
-                    fontSize: "1rem",
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
                     fontWeight: 600,
+                    minWidth: { xs: 100, sm: 140 },
                   },
                   "& .Mui-selected": {
                     color: "#4F46E5",

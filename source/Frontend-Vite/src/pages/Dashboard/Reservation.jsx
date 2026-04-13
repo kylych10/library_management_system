@@ -1,154 +1,134 @@
-import { EventAvailable } from '@mui/icons-material';
-import React from 'react'
-import { useNavigate } from 'react-router-dom';
-import GetStatusChip from './getStatusChip';
-import { Button } from '@mui/material';
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import { getMyReservations } from '../../store/features/reservations/reservationThunk';
-import { useDispatch } from 'react-redux';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Box, Typography, Button, Stack, Chip, alpha } from "@mui/material";
+import { EventAvailable, Visibility } from "@mui/icons-material";
+import GetStatusChip from "./getStatusChip";
+import { getMyReservations } from "../../store/features/reservations/reservationThunk";
 
 const Reservation = () => {
-    
-    const navigate = useNavigate();
-      const { reservations } = useSelector((state) => state.reservations);
-      const dispatch = useDispatch();
-        useEffect(() => {
-         
-          loadReservations();
-        }, []);
-      
-        const loadReservations=()=>{
-          dispatch(
-            getMyReservations({
-             
-              page: 0,
-              size: 20,
-            })
-          );
-        }
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { reservations } = useSelector((state) => state.reservations);
+
+  useEffect(() => {
+    dispatch(getMyReservations({ page: 0, size: 20 }));
+  }, []);
+
   return (
- <div className="p-6">
-  <h3 className="text-2xl font-bold text-gray-900 mb-6">
-    Your Book Reservations
-  </h3>
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" fontWeight={700} color="#111827" sx={{ mb: 3 }}>
+        Your Book Reservations
+      </Typography>
 
-  {/* EMPTY STATE */}
-  {reservations.length === 0 ? (
-    <div className="text-center py-12 border border-dashed rounded-xl">
-      <p className="text-gray-500 text-lg">
-        📚 You haven’t reserved any books yet
-      </p>
-      <p className="text-sm text-gray-400 mt-2">
-        Browse the library and reserve your next read!
-      </p>
-    </div>
-  ) : (
-    <div className="space-y-4">
-      {reservations.map((reservation) => (
-        <div
-          key={reservation.id}
-          className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+      {reservations.length === 0 ? (
+        <Box
+          sx={{
+            textAlign: "center",
+            py: { xs: 6, md: 8 },
+            border: "2px dashed rgba(0,0,0,0.1)",
+            borderRadius: 3,
+          }}
         >
-          {/* LEFT */}
-          <div className="flex items-center space-x-4 flex-1">
-            <div className="w-16 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center">
-              <EventAvailable
-                sx={{
-                  fontSize: 32,
-                  color: "#9333EA",
-                  opacity: 0.3,
-                }}
-              />
-            </div>
-
-            <div className="flex-1">
-              <h4 className="text-lg font-semibold text-gray-900 mb-1">
-                {reservation.bookTitle}
-              </h4>
-              <p className="text-gray-600 mb-2">
-                {reservation.bookAuthor}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <span className="text-gray-600">
-                  Reserved:{" "}
-                  {new Date(reservation.reservedAt).toLocaleDateString()}
-                </span>
-
-                <GetStatusChip status={reservation.status} />
-
-                {reservation.status === "PENDING" && (
-                  <>
-                    <span className="text-gray-600">
-                      Queue Position: #{reservation.queuePosition}
-                    </span>
-
-                    {reservation.availableAt && (
-                      <span className="text-gray-600">
-                        Est. Available:{" "}
-                        {new Date(
-                          reservation.availableAt
-                        ).toLocaleDateString()}
-                      </span>
-                    )}
-                  </>
-                )}
-
-                {reservation.status === "READY" && (
-                  <span className="text-green-600 font-medium">
-                    Ready for pickup
-                  </span>
-                )}
-              </div>
-
-              {reservation.notes && (
-                <p className="text-sm text-gray-500 mt-2 italic">
-                  “{reservation.notes}”
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT ACTIONS */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => navigate(`/books/${reservation.bookId}`)}
-              sx={{ borderColor: "#9333EA", color: "#9333EA" }}
+          <EventAvailable sx={{ fontSize: 56, color: "text.disabled", mb: 1.5 }} />
+          <Typography variant="body1" color="text.secondary" mb={0.5}>
+            You haven't reserved any books yet
+          </Typography>
+          <Typography variant="body2" color="text.disabled">
+            Browse the library and reserve your next read!
+          </Typography>
+        </Box>
+      ) : (
+        <Stack spacing={2}>
+          {reservations.map((reservation) => (
+            <Box
+              key={reservation.id}
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+                gap: 2,
+                p: { xs: 2, sm: 3 },
+                border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: 3,
+                bgcolor: "white",
+                transition: "box-shadow 0.2s",
+                "&:hover": { boxShadow: "0 4px 16px rgba(0,0,0,0.1)" },
+              }}
             >
-              View
-            </Button>
+              {/* Left: icon + info */}
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, flex: 1, minWidth: 0 }}>
+                <Box
+                  sx={{
+                    width: 56,
+                    height: 80,
+                    borderRadius: 1.5,
+                    background: "linear-gradient(135deg, #F5F3FF 0%, #FCE7F3 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <EventAvailable sx={{ fontSize: 28, color: "#9333EA", opacity: 0.4 }} />
+                </Box>
 
-            {reservation.status === "READY" && (
-              <Button
-                variant="contained"
-                size="small"
-                sx={{ bgcolor: "#10B981" }}
-              >
-                Pick Up
-              </Button>
-            )}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#111827", mb: 0.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {reservation.bookTitle}
+                  </Typography>
+                  {reservation.bookAuthor && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {reservation.bookAuthor}
+                    </Typography>
+                  )}
 
-            {reservation.canBeCancelled && reservation.status === "PENDING" && (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Reserved: {new Date(reservation.reservedAt).toLocaleDateString()}
+                    </Typography>
+                    <GetStatusChip status={reservation.status} />
+                    {reservation.status === "PENDING" && reservation.queuePosition && (
+                      <Chip label={`Queue #${reservation.queuePosition}`} size="small" color="warning" variant="outlined" />
+                    )}
+                    {reservation.status === "AVAILABLE" && (
+                      <Chip label="Ready for pickup" size="small" color="success" variant="outlined" />
+                    )}
+                  </Box>
+
+                  {reservation.notes && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontStyle: "italic" }}>
+                      "{reservation.notes}"
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Right: action */}
               <Button
                 variant="outlined"
                 size="small"
-                color="error"
+                startIcon={<Visibility fontSize="small" />}
+                onClick={() => navigate(`/books/${reservation.bookId}`)}
+                sx={{
+                  borderColor: "#9333EA",
+                  color: "#9333EA",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  flexShrink: 0,
+                  alignSelf: { xs: "stretch", sm: "center" },
+                  "&:hover": { bgcolor: "rgba(147,51,234,0.05)" },
+                }}
               >
-                Cancel
+                View
               </Button>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+            </Box>
+          ))}
+        </Stack>
+      )}
+    </Box>
+  );
+};
 
-  )
-}
-
-export default Reservation
+export default Reservation;

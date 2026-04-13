@@ -65,17 +65,25 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User updateExistingUser(User user, String name, String picture, String googleId) {
-        // Update user info if needed
         if (user.getAuthProvider() == AuthProvider.LOCAL) {
-            // Link Google account to existing local account
+            // First time linking Google to a local account — set provider
             user.setAuthProvider(AuthProvider.GOOGLE);
         }
 
+        // Check BEFORE setting googleId — null means this is their first Google login
+        boolean firstGoogleLogin = user.getGoogleId() == null;
+
         user.setGoogleId(googleId);
-        user.setProfileImage(picture);
-        user.setFullName(name);
         user.setVerified(true);
         user.setLastLogin(LocalDateTime.now());
+
+        // Only overwrite name/picture on first Google login or if they are blank
+        if (firstGoogleLogin || user.getFullName() == null || user.getFullName().isBlank()) {
+            user.setFullName(name);
+        }
+        if (firstGoogleLogin || user.getProfileImage() == null || user.getProfileImage().isBlank()) {
+            user.setProfileImage(picture);
+        }
 
         return userRepository.save(user);
     }

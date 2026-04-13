@@ -1,5 +1,6 @@
 package com.kylych.payload.dto;
 
+import com.kylych.domain.BookLoanStatus;
 import com.kylych.domain.FineStatus;
 import com.kylych.domain.FineType;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,8 @@ public class FineDTO {
 
     @NotNull(message = "Book loan ID is mandatory")
     private Long bookLoanId;
+
+    private BookLoanStatus bookLoanStatus;
 
     private String bookTitle;
 

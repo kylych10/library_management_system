@@ -6,6 +6,7 @@ import com.kylych.modal.User;
 
 
 import com.kylych.payload.dto.UserDTO;
+import com.kylych.payload.request.UpdateProfileRequest;
 import com.kylych.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +39,19 @@ public class UserController {
 		UserDTO userDTO=UserMapper.toDTO(user);
 
 		return new ResponseEntity<>(userDTO,HttpStatus.OK);
+	}
+
+	/**
+	 * Update current user's profile
+	 * PUT /api/users/profile
+	 */
+	@PutMapping("/api/users/profile")
+	public ResponseEntity<UserDTO> updateProfileHandler(
+			@RequestHeader("Authorization") String jwt,
+			@RequestBody UpdateProfileRequest request) throws UserException {
+		User user = userService.updateProfile(jwt, request);
+		UserDTO userDTO = UserMapper.toDTO(user);
+		return new ResponseEntity<>(userDTO, HttpStatus.OK);
 	}
 
 

@@ -207,7 +207,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public NotificationDTO markAsRead(Long notificationId, User user) throws UserException {
-        return null;
+        log.info("Marking notification {} as read for user: {}", notificationId, user.getEmail());
+
+        Notification notification = notificationRepository.findByIdAndUser(notificationId, user)
+                .orElseThrow(() -> new UserException("Notification not found or doesn't belong to user"));
+
+        if (!notification.getIsRead()) {
+            notification.setIsRead(true);
+            notification.setReadAt(LocalDateTime.now());
+            notification = notificationRepository.save(notification);
+        }
+
+        return NotificationMapper.toDTO(notification);
     }
 
     /**
@@ -282,7 +293,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotification(Long notificationId, User user) throws UserException {
+        log.info("Deleting notification {} for user: {}", notificationId, user.getEmail());
 
+        Notification notification = notificationRepository.findByIdAndUser(notificationId, user)
+                .orElseThrow(() -> new UserException("Notification not found or doesn't belong to user"));
+
+        notificationRepository.delete(notification);
+        log.info("Successfully deleted notification {}", notificationId);
     }
 
     /**

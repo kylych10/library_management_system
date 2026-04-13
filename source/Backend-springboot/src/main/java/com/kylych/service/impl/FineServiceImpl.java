@@ -2,6 +2,7 @@ package com.kylych.service.impl;
 
 import com.kylych.domain.FineStatus;
 import com.kylych.domain.FineType;
+import com.kylych.domain.NotificationType;
 import com.kylych.domain.PaymentGateway;
 import com.kylych.domain.PaymentType;
 import com.kylych.exception.FineException;
@@ -19,11 +20,15 @@ import com.kylych.payload.response.PageResponse;
 import com.kylych.payload.response.PaymentInitiateResponse;
 import com.kylych.repository.BookLoanRepository;
 import com.kylych.repository.FineRepository;
+import com.kylych.repository.PaymentRepository;
 import com.kylych.repository.UserRepository;
 import com.kylych.service.FineService;
+import com.kylych.service.NotificationService;
 import com.kylych.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +57,10 @@ public class FineServiceImpl implements FineService {
     private final UserRepository userRepository;
     private final FineMapper fineMapper;
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
+
+    @Autowired @Lazy
+    private NotificationService notificationService;
 
 
     // ==================== CREATE OPERATIONS ====================
@@ -63,21 +72,53 @@ public class FineServiceImpl implements FineService {
                 .orElseThrow(() -> new BookLoanException(
                         "Book loan not found with id: " + createRequest.getBookLoanId()));
 
-        // 2. Create fine
-        Fine fine = Fine.builder()
-                
-                .bookLoan(bookLoan)
-                .user(bookLoan.getUser())
-                .type(createRequest.getType())
-                .amount(createRequest.getAmount())
-                .amountPaid(0L)
-                .status(FineStatus.PENDING)
-                .reason(createRequest.getReason())
-                .notes(createRequest.getNotes()).build();
+        // 2. Reuse existing non-waived fine if one already exists for this loan
+        Fine fine = fineRepository.findByBookLoanId(bookLoan.getId()).stream()
+                .filter(f -> f.getStatus() != FineStatus.WAIVED)
+                .findFirst()
+                .orElse(null);
+
+        if (fine == null) {
+            fine = Fine.builder()
+                    .bookLoan(bookLoan)
+                    .user(bookLoan.getUser())
+                    .type(createRequest.getType())
+                    .amount(createRequest.getAmount())
+                    .amountPaid(0L)
+                    .status(FineStatus.PENDING)
+                    .reason(createRequest.getReason())
+                    .notes(createRequest.getNotes())
+                    .build();
+        } else {
+            fine.setType(createRequest.getType());
+            fine.setAmount(createRequest.getAmount());
+            fine.setAmountPaid(0L);
+            fine.setStatus(FineStatus.PENDING);
+            fine.setReason(createRequest.getReason());
+            fine.setNotes(createRequest.getNotes());
+            fine.setTransactionId(null);
+            fine.setUpdatedAt(LocalDateTime.now());
+        }
 
         // 3. Save and return
         Fine savedFine = fineRepository.save(fine);
-        log.info("Created fine: {} for book loan: {}", savedFine.getId(), bookLoan.getId());
+        log.info("Upserted fine: {} for book loan: {}", savedFine.getId(), bookLoan.getId());
+
+        // Notify the user about the fine
+        try {
+            String bookTitle = bookLoan.getBook() != null ? bookLoan.getBook().getTitle() : "Unknown Book";
+            String amountStr = String.format("$%.2f", savedFine.getAmount() / 100.0);
+            notificationService.createNotification(
+                    savedFine.getUser(),
+                    "Fine Added to Your Account",
+                    "A fine of " + amountStr + " has been added for \"" + bookTitle + "\". Reason: " + (savedFine.getReason() != null ? savedFine.getReason() : savedFine.getType().name()),
+                    NotificationType.FINE_NOTIFICATION,
+                    savedFine.getId()
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send fine creation notification for fine {}: {}", savedFine.getId(), e.getMessage());
+        }
+
         return fineMapper.toDTO(savedFine);
     }
 
@@ -123,6 +164,53 @@ public class FineServiceImpl implements FineService {
 
     @Override
     @Transactional
+    public FineDTO markFineAsPaidDirect(Long fineId) throws FineException {
+        Fine fine = fineRepository.findById(fineId)
+                .orElseThrow(() -> new FineException("Fine not found with id: " + fineId));
+
+        if (fine.getStatus() == FineStatus.PAID) {
+            throw new FineException("Fine is already fully paid");
+        }
+        if (fine.getStatus() == FineStatus.WAIVED) {
+            throw new FineException("Fine has been waived");
+        }
+
+        // Verify caller owns this fine (admins bypass this check)
+        User caller = getCurrentAuthenticatedUser();
+        boolean isAdmin = com.kylych.domain.UserRole.ROLE_ADMIN.equals(caller.getRole());
+        if (!isAdmin && !fine.getUser().getId().equals(caller.getId())) {
+            throw new FineException("You are not authorized to pay this fine");
+        }
+
+        fine.setAmountPaid(fine.getAmount());
+        fine.setStatus(FineStatus.PAID);
+        fine.setTransactionId("DIRECT_" + caller.getId() + "_" + fineId);
+        fine.setUpdatedAt(LocalDateTime.now());
+
+        Fine savedFine = fineRepository.save(fine);
+        log.info("Fine {} marked as paid directly by user {}", fineId, caller.getId());
+
+        // Notify the user their fine is paid
+        try {
+            String bookTitle = savedFine.getBookLoan() != null && savedFine.getBookLoan().getBook() != null
+                    ? savedFine.getBookLoan().getBook().getTitle() : "Unknown Book";
+            String amountStr = String.format("$%.2f", savedFine.getAmount() / 100.0);
+            notificationService.createNotification(
+                    savedFine.getUser(),
+                    "Fine Marked as Paid",
+                    "Your fine of " + amountStr + " for \"" + bookTitle + "\" has been marked as paid.",
+                    NotificationType.FINE_NOTIFICATION,
+                    savedFine.getId()
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send direct fine paid notification for fine {}: {}", fineId, e.getMessage());
+        }
+
+        return fineMapper.toDTO(savedFine);
+    }
+
+    @Override
+    @Transactional
     public void markFineAsPaid(Long fineId, Long amount, String transactionId) throws FineException {
         Fine fine = fineRepository.findById(fineId)
                 .orElseThrow(() -> new FineException(
@@ -134,9 +222,25 @@ public class FineServiceImpl implements FineService {
         fine.setStatus(FineStatus.PAID);
         fine.setUpdatedAt(LocalDateTime.now());
 
-        fineRepository.save(fine);
+        Fine savedFine = fineRepository.save(fine);
 
         log.info("Fine {} marked as fully paid (txn: {})", fineId, transactionId);
+
+        // Notify the user their fine payment was received
+        try {
+            String bookTitle = savedFine.getBookLoan() != null && savedFine.getBookLoan().getBook() != null
+                    ? savedFine.getBookLoan().getBook().getTitle() : "Unknown Book";
+            String amountStr = String.format("$%.2f", savedFine.getAmount() / 100.0);
+            notificationService.createNotification(
+                    savedFine.getUser(),
+                    "Fine Payment Received",
+                    "Your fine payment of " + amountStr + " for \"" + bookTitle + "\" has been received. Your account is now clear.",
+                    NotificationType.FINE_NOTIFICATION,
+                    savedFine.getId()
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send fine paid notification for fine {}: {}", fineId, e.getMessage());
+        }
     }
 
 
@@ -164,6 +268,24 @@ public class FineServiceImpl implements FineService {
         // 4. Save and return
         Fine savedFine = fineRepository.save(fine);
         log.info("Fine {} waived by admin: {}", fine.getId(), currentAdmin.getId());
+
+        // Notify the user their fine was waived
+        try {
+            String bookTitle = savedFine.getBookLoan() != null && savedFine.getBookLoan().getBook() != null
+                    ? savedFine.getBookLoan().getBook().getTitle() : "Unknown Book";
+            String amountStr = String.format("$%.2f", savedFine.getAmount() / 100.0);
+            String reason = waiveRequest.getReason() != null ? waiveRequest.getReason() : "No reason provided";
+            notificationService.createNotification(
+                    savedFine.getUser(),
+                    "Fine Waived",
+                    "Your fine of " + amountStr + " for \"" + bookTitle + "\" has been waived. Reason: " + reason,
+                    NotificationType.FINE_NOTIFICATION,
+                    savedFine.getId()
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send fine waiver notification for fine {}: {}", savedFine.getId(), e.getMessage());
+        }
+
         return fineMapper.toDTO(savedFine);
     }
 
@@ -264,6 +386,13 @@ public class FineServiceImpl implements FineService {
     public void deleteFine(Long fineId) throws FineException {
         Fine fine = fineRepository.findById(fineId)
                 .orElseThrow(() -> new FineException("Fine not found with id: " + fineId));
+
+        // Unlink any payment records referencing this fine to avoid FK constraint failure
+        paymentRepository.findByFineId(fineId).forEach(payment -> {
+            payment.setFine(null);
+            paymentRepository.save(payment);
+        });
+
         fineRepository.delete(fine);
         log.warn("Fine {} deleted", fineId);
     }

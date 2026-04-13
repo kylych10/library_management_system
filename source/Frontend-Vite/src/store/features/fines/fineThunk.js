@@ -49,6 +49,24 @@ export const payFine = createAsyncThunk(
   }
 );
 
+/**
+ * Pay a fine directly without payment gateway (Admin only)
+ * POST /api/fines/{id}/pay-direct
+ */
+export const payFineDirect = createAsyncThunk(
+  'fines/payFineDirect',
+  async (fineId, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`${API_URL}/${fineId}/pay-direct`, {}, {
+        headers: getHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Payment failed');
+    }
+  }
+);
+
 // ==================== WAIVER OPERATIONS ====================
 
 /**
