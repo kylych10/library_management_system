@@ -64,7 +64,7 @@ const Footer = () => {
                 <MenuBookIcon sx={{ fontSize: 24, color: 'white' }} />
               </div>
               <span className="text-2xl font-bold text-white">
-                Zosh Library
+                The Library
               </span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-sm">
