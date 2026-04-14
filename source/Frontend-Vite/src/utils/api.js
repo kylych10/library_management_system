@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   // baseURL: 'http://localhost:5000',
-    baseURL: "librarymanagementsystem-production-fc6e.up.railway.app",
+    baseURL: 'https://librarymanagementsystem-production-fc6e.up.railway.app',
   headers: {
     'Content-Type': 'application/json',
   },
