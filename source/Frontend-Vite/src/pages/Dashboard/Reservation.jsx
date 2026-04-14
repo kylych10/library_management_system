@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button, Stack, Chip, alpha } from "@mui/material";
 import { EventAvailable, Visibility } from "@mui/icons-material";
-import GetStatusChip from "./getStatusChip";
+import GetStatusChip from "./GetStatusChip";
 import { getMyReservations } from "../../store/features/reservations/reservationThunk";
 
 const Reservation = () => {
