@@ -2,7 +2,6 @@ package com.kylych.configurations;
 
 import com.kylych.oauth2.CustomOAuth2UserService;
 import com.kylych.oauth2.OAuth2LoginSuccessHandler;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +15,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 
 @Configuration
@@ -61,35 +62,47 @@ public class SecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 
+	/**
+	 * Primary CorsFilter bean — runs before Spring Security so CORS headers
+	 * are always present even when the backend returns a 4xx/5xx error.
+	 */
+	@Bean
+	public CorsFilter corsFilter() {
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		CorsConfiguration cfg = buildCorsConfiguration();
+		source.registerCorsConfiguration("/**", cfg);
+		return new CorsFilter(source);
+	}
+
 	private CorsConfigurationSource corsConfigurationSource() {
-		return request -> {
-			CorsConfiguration cfg = new CorsConfiguration();
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", buildCorsConfiguration());
+		return source;
+	}
 
-			cfg.setAllowedOrigins(Arrays.asList(
-					"http://localhost:3000",
-					"http://localhost:5173",
-					"http://localhost:5174",
-					"https://kylychlibrary.netlify.app"
-			));
+	private CorsConfiguration buildCorsConfiguration() {
+		CorsConfiguration cfg = new CorsConfiguration();
 
-			cfg.setAllowedMethods(Arrays.asList(
-					"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-			));
+		cfg.setAllowedOrigins(Arrays.asList(
+				"http://localhost:3000",
+				"http://localhost:5173",
+				"http://localhost:5174",
+				"https://kylychlibrary.netlify.app"
+		));
 
-			cfg.setAllowedHeaders(Arrays.asList(
-					"Authorization",
-					"Content-Type",
-					"X-Requested-With",
-					"Accept",
-					"Origin"
-			));
+		cfg.setAllowedMethods(Arrays.asList(
+				"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+		));
 
-			cfg.setAllowCredentials(true);
+		cfg.setAllowedHeaders(List.of("*"));
 
-			cfg.setExposedHeaders(Arrays.asList("Authorization"));
+		cfg.setAllowCredentials(true);
 
-			return cfg;
-		};
+		cfg.setExposedHeaders(Arrays.asList("Authorization"));
+
+		cfg.setMaxAge(3600L);
+
+		return cfg;
 	}
 
 }
