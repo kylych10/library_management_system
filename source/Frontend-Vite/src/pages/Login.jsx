@@ -277,7 +277,7 @@ const Login = () => {
                 disabled={loading}
                 onClick={() => {
                   window.location.href = 
-                  'http://localhost:5000/oauth2/authorization/google';
+                  `${import.meta.env.VITE_API_BASE_URL || 'https://librarymanagementsystem-production-fc6e.up.railway.app'}/oauth2/authorization/google`;
                 }}
                 sx={{
                   py: 1.5,
