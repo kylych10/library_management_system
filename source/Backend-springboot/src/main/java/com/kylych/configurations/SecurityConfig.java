@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,6 +38,8 @@ public class SecurityConfig {
 
 		return http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.authorizeHttpRequests(Authorize -> Authorize
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.requestMatchers("/auth/**").permitAll()
 						.requestMatchers("/api/**").authenticated()
 						.requestMatchers("/api/super-admin/**").hasRole("ADMIN")
 						.anyRequest().permitAll())
@@ -59,23 +62,33 @@ public class SecurityConfig {
 	}
 
 	private CorsConfigurationSource corsConfigurationSource() {
-		return new CorsConfigurationSource() {
-			@Override
-			public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-				CorsConfiguration cfg = new CorsConfiguration();
-				cfg.setAllowedOrigins(Arrays.asList(
-						"http://localhost:3000",
-						"http://localhost:5173",
-						"http://localhost:5174",
-						"https://kylychlibrary.netlify.app"
-						));
-				cfg.setAllowedMethods(Collections.singletonList("*"));
-				cfg.setAllowCredentials(true);
-				cfg.setAllowedHeaders(Collections.singletonList("*"));
-				cfg.setExposedHeaders(Arrays.asList("Authorization"));
-				cfg.setMaxAge(3600L);
-				return cfg;
-			}
+		return request -> {
+			CorsConfiguration cfg = new CorsConfiguration();
+
+			cfg.setAllowedOrigins(Arrays.asList(
+					"http://localhost:3000",
+					"http://localhost:5173",
+					"http://localhost:5174",
+					"https://kylychlibrary.netlify.app"
+			));
+
+			cfg.setAllowedMethods(Arrays.asList(
+					"GET", "POST", "PUT", "DELETE", "OPTIONS"
+			));
+
+			cfg.setAllowedHeaders(Arrays.asList(
+					"Authorization",
+					"Content-Type",
+					"X-Requested-With",
+					"Accept",
+					"Origin"
+			));
+
+			cfg.setAllowCredentials(true);
+
+			cfg.setExposedHeaders(Arrays.asList("Authorization"));
+
+			return cfg;
 		};
 	}
 
