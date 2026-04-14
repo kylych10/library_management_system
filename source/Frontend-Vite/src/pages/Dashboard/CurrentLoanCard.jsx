@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Chip, Button, alpha } from "@mui/material";
 import { AccessTime, LibraryBooks, Visibility } from "@mui/icons-material";
-import GetStatusChip from "./getStatusChip";
+import GetStatusChip from "./GetStatusChip";
 import { getDaysRemainingColor } from "./utils";
 import { useNavigate } from "react-router-dom";
 
