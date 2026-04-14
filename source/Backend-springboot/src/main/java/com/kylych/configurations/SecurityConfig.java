@@ -73,7 +73,7 @@ public class SecurityConfig {
 			));
 
 			cfg.setAllowedMethods(Arrays.asList(
-					"GET", "POST", "PUT", "DELETE", "OPTIONS"
+					"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
 			));
 
 			cfg.setAllowedHeaders(Arrays.asList(
