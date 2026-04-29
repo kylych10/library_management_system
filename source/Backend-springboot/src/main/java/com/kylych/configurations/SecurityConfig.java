@@ -90,7 +90,7 @@ public class SecurityConfig {
 				"http://localhost:5173",
 				"http://localhost:5174",
 				"https://kylychlibrary.netlify.app",
-				"https://kitep.space/"
+				"https://kitep.space"
 		));
 
 		cfg.setAllowedMethods(Arrays.asList(
