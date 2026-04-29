@@ -154,7 +154,7 @@ const SidebarDrawer = ({ isMobile, setMobileOpen, handleProfileMenuClose }) => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            TheLibrary
+            Kitep Space
           </Typography>
           <Typography
             variant="caption"

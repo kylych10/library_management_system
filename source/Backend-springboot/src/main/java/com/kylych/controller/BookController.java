@@ -177,15 +177,16 @@ public class BookController {
             @RequestParam(required = false) Long genreId,
             @RequestParam(required = false) Boolean availableOnly,
             @RequestParam(defaultValue = "true") boolean activeOnly,
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
-        // Build search request from query parameters
         BookSearchRequest searchRequest = new BookSearchRequest();
         searchRequest.setGenreId(genreId);
         searchRequest.setAvailableOnly(availableOnly);
+        searchRequest.setSearchTerm(search);
         searchRequest.setPage(page);
         searchRequest.setSize(size);
         searchRequest.setSortBy(sortBy);

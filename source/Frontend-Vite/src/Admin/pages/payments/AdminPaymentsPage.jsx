@@ -123,7 +123,7 @@ export default function AdminPaymentsPage() {
   };
 
   const getGatewayChip = (gateway) => {
-    const color = gateway === 'STRIPE' ? 'primary' : gateway === 'RAZORPAY' ? 'warning' : 'default';
+    const color = gateway === 'STRIPE' ? 'primary' : 'default';
     return <Chip label={gateway} color={color} size="small" />;
   };
 
@@ -284,7 +284,8 @@ export default function AdminPaymentsPage() {
               >
                 <MenuItem value="">All Gateways</MenuItem>
                 <MenuItem value="STRIPE">Stripe</MenuItem>
-                <MenuItem value="RAZORPAY">Razorpay</MenuItem>
+                <MenuItem value="CASH">Cash</MenuItem>
+                <MenuItem value="MANUAL">Manual</MenuItem>
               </Select>
             </FormControl>
           </Grid>

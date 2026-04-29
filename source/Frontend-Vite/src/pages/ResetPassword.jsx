@@ -108,7 +108,7 @@ const ResetPassword = () => {
             <div className="p-3 bg-indigo-600 rounded-xl group-hover:bg-indigo-700 transition-colors">
               <MenuBookIcon sx={{ fontSize: 32, color: 'white' }} />
             </div>
-            <span className="text-3xl font-bold text-gray-900">The Library</span>
+            <span className="text-3xl font-bold text-gray-900">Kitep Space</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h2>
           <p className="text-gray-600">Enter your new password below</p>

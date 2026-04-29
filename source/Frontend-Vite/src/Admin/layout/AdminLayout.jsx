@@ -45,6 +45,7 @@ import {
     Shield as ShieldIcon,
     TrendingUp as TrendingUpIcon,
     Gavel as FineIcon,
+    SwapHoriz as SwapIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -120,6 +121,12 @@ const navigationItems = [
         path: '/admin/payments',
         icon: <PaymentIcon />,
         description: 'Transaction History',
+    },
+    {
+        title: 'Book Exchange',
+        path: '/admin/exchange',
+        icon: <SwapIcon />,
+        description: 'Exchange Management',
     },
 ];
 

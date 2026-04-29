@@ -16,26 +16,19 @@ import com.kylych.payload.response.PaymentInitiateResponse;
 import com.kylych.payload.response.RevenueStatisticsResponse;
 import com.kylych.repository.*;
 import com.kylych.service.PaymentService;
-import com.kylych.service.gateway.RazorpayService;
 import com.kylych.service.gateway.StripeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.kylych.payload.response.PaymentLinkResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Implementation of PaymentService
- * Handles payment processing with Razorpay and Stripe
- */
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -47,27 +40,22 @@ public class PaymentServiceImpl implements PaymentService {
     private final BookLoanRepository bookLoanRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PaymentMapper paymentMapper;
-    private final RazorpayService razorpayService;
     private final StripeService stripeService;
     private final FineRepository fineRepository;
     private final PaymentEventPublisher paymentEventPublisher;
 
-
     @Override
-    public PaymentInitiateResponse initiatePayment(
-            PaymentInitiateRequest request) throws PaymentException {
+    public PaymentInitiateResponse initiatePayment(PaymentInitiateRequest request) throws PaymentException {
         log.info("Initiating payment for user: {}, type: {}, gateway: {}",
                 request.getUserId(), request.getPaymentType(), request.getGateway());
 
-        // 1. Validate user
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new PaymentException("User not found with ID: " + request.getUserId()));
 
-        // 2. Create payment record
         Payment payment = new Payment();
         payment.setUser(user);
         payment.setPaymentType(request.getPaymentType());
-        payment.setGateway(request.getGateway());
+        payment.setGateway(request.getGateway() != null ? request.getGateway() : PaymentGateway.STRIPE);
         payment.setAmount(request.getAmount());
         payment.setCurrency(request.getCurrency() != null ? request.getCurrency() : "INR");
         payment.setDescription(request.getDescription());
@@ -75,20 +63,16 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setTransactionId("TXN_" + UUID.randomUUID());
         payment.setInitiatedAt(LocalDateTime.now());
 
-        // 3. Link associations (if provided)
         if (request.getSubscriptionId() != null) {
-            Subscription sub = subscriptionRepository
-                    .findById(request.getSubscriptionId())
+            Subscription sub = subscriptionRepository.findById(request.getSubscriptionId())
                     .orElseThrow(() -> new PaymentException("Subscription not found"));
             payment.setSubscription(sub);
         }
-
         if (request.getBookLoanId() != null) {
             BookLoan loan = bookLoanRepository.findById(request.getBookLoanId())
                     .orElseThrow(() -> new PaymentException("Book loan not found"));
             payment.setBookLoan(loan);
         }
-
         if (request.getFineId() != null) {
             Fine fine = fineRepository.findById(request.getFineId())
                     .orElseThrow(() -> new PaymentException("Fine not found"));
@@ -97,108 +81,57 @@ public class PaymentServiceImpl implements PaymentService {
 
         payment = paymentRepository.save(payment);
 
-        // 4. Initiate payment with gateway
         PaymentInitiateResponse response;
-        if (request.getGateway() == PaymentGateway.RAZORPAY) {
-            PaymentLinkResponse linkResponse = razorpayService.createPaymentLink(
-                    user,
-                    payment
-            );
-
-            response= PaymentInitiateResponse.builder()
+        if (payment.getGateway() == PaymentGateway.STRIPE) {
+            response = stripeService.createPaymentIntent(payment);
+        } else {
+            // CASH / MANUAL / FREE — no external gateway call
+            response = PaymentInitiateResponse.builder()
                     .paymentId(payment.getId())
                     .gateway(payment.getGateway())
-                    .checkoutUrl(linkResponse.getPayment_link_url())
-                    .transactionId(linkResponse.getPayment_link_id())
+                    .transactionId(payment.getTransactionId())
                     .amount(payment.getAmount())
                     .currency(payment.getCurrency())
                     .description(payment.getDescription())
                     .success(true)
-                    .message("Payment initiated successfully")
+                    .message("Payment recorded")
                     .build();
-
-
-            payment.setGatewayOrderId(linkResponse.getPayment_link_id());
-        } else if (request.getGateway() == PaymentGateway.STRIPE) {
-            response = stripeService.createPaymentIntent(payment);
-        } else {
-            throw new PaymentException("Unsupported payment gateway: " + request.getGateway());
         }
 
         payment.setStatus(PaymentStatus.PROCESSING);
         payment = paymentRepository.save(payment);
 
-        // Publish payment initiated event
         publishPaymentInitiatedEvent(payment, response.getCheckoutUrl());
-
         return response;
     }
 
     @Override
     public PaymentDTO verifyPayment(PaymentVerifyRequest request) throws PaymentException {
+        boolean isValid = stripeService.verifyPayment(request.getStripePaymentIntentId());
 
-
-
-        // gatway payment
-        JSONObject paymentDetails = razorpayService
-                .fetchPaymentDetails(request.getRazorpayPaymentId());
-
-        System.out.println("gatway payment details: " + paymentDetails);
-
-        long amount = paymentDetails.getLong("amount");
-
-
-        // Extract 'notes' object
-        JSONObject notes = paymentDetails.getJSONObject("notes");
-
-        // Access specific fields inside 'notes'
-
-        Long paymentId = Long.parseLong(notes.optString("payment_id"));
-
-
-        Payment payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
+        Payment payment = paymentRepository
+                .findAll()
+                .stream()
+                .filter(p -> request.getStripePaymentIntentId() != null
+                        && request.getStripePaymentIntentId().equals(p.getGatewayPaymentId()))
+                .findFirst()
+                .orElseThrow(() -> new PaymentException("Payment not found for Stripe intent: "
+                        + request.getStripePaymentIntentId()));
 
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            log.warn("Payment already completed: {}", payment.getId());
             return paymentMapper.toDTO(payment);
         }
 
-        boolean isValid = razorpayService.isValidPayment(
-                request.getRazorpayPaymentId());
-
-        if (payment.getGateway() == PaymentGateway.RAZORPAY) {
-
-            if (isValid) {
-                payment.setGatewayPaymentId(request.getRazorpayPaymentId());
-                payment.setGatewayOrderId(request.getRazorpayOrderId());
-                payment.setGatewaySignature(request.getRazorpaySignature());
-            }
-        } else if (payment.getGateway() == PaymentGateway.STRIPE) {
-            isValid = stripeService.verifyPayment(request.getStripePaymentIntentId());
-
-            if (isValid) {
-                payment.setGatewayPaymentId(request.getStripePaymentIntentId());
-            }
-        }
-
         if (isValid) {
+            payment.setGatewayPaymentId(request.getStripePaymentIntentId());
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setCompletedAt(LocalDateTime.now());
-            log.info("Payment verified successfully: {}", payment.getId());
-
-            // Save payment first
             payment = paymentRepository.save(payment);
-
-            // Publish payment success event (instead of direct service calls)
             publishPaymentSuccessEvent(payment);
         } else {
             payment.setStatus(PaymentStatus.FAILED);
             payment.setFailureReason("Payment verification failed");
-            log.error("Payment verification failed: {}", payment.getId());
             payment = paymentRepository.save(payment);
-
-            // Publish payment failed event
             publishPaymentFailedEvent(payment);
         }
 
@@ -207,59 +140,45 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentDTO getPaymentById(Long paymentId) throws PaymentException {
-        Payment payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
-        return paymentMapper.toDTO(payment);
+        return paymentMapper.toDTO(paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId)));
     }
 
     @Override
     public PaymentDTO getPaymentByTransactionId(String transactionId) throws PaymentException {
-        Payment payment = paymentRepository.findByTransactionId(transactionId)
-            .orElseThrow(() -> new PaymentException("Payment not found with transaction ID: " + transactionId));
-        return paymentMapper.toDTO(payment);
+        return paymentMapper.toDTO(paymentRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new PaymentException("Payment not found: " + transactionId)));
     }
 
     @Override
     public Page<PaymentDTO> getUserPayments(Long userId, Pageable pageable) throws PaymentException {
-        if (!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId))
             throw new PaymentException("User not found with ID: " + userId);
-        }
-        Page<Payment> payments = paymentRepository.findByUserIdAndActiveTrue(userId, pageable);
-        return payments.map(paymentMapper::toDTO);
+        return paymentRepository.findByUserIdAndActiveTrue(userId, pageable).map(paymentMapper::toDTO);
     }
 
     @Override
     public Page<PaymentDTO> getAllPayments(Pageable pageable) {
-        Page<Payment> payments = paymentRepository.findAll(pageable);
-        return payments.map(paymentMapper::toDTO);
+        return paymentRepository.findAll(pageable).map(paymentMapper::toDTO);
     }
 
     @Override
     public PaymentDTO cancelPayment(Long paymentId) throws PaymentException {
         Payment payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
-
-        if (!payment.isPending()) {
+                .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
+        if (!payment.isPending())
             throw new PaymentException("Only pending payments can be cancelled");
-        }
-
         payment.setStatus(PaymentStatus.CANCELLED);
-        payment = paymentRepository.save(payment);
-
-        log.info("Payment cancelled: {}", paymentId);
-        return paymentMapper.toDTO(payment);
+        return paymentMapper.toDTO(paymentRepository.save(payment));
     }
 
     @Override
     public PaymentInitiateResponse retryPayment(Long paymentId) throws PaymentException {
         Payment payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
+                .orElseThrow(() -> new PaymentException("Payment not found with ID: " + paymentId));
+        if (!payment.canRetry())
+            throw new PaymentException("Payment cannot be retried");
 
-        if (!payment.canRetry()) {
-            throw new PaymentException("Payment cannot be retried. Max retry attempts reached or payment is not in failed/cancelled state");
-        }
-
-        // Create new payment initiate request from existing payment
         PaymentInitiateRequest request = new PaymentInitiateRequest();
         request.setUserId(payment.getUser().getId());
         request.setBookLoanId(payment.getBookLoan() != null ? payment.getBookLoan().getId() : null);
@@ -269,222 +188,88 @@ public class PaymentServiceImpl implements PaymentService {
         request.setCurrency(payment.getCurrency());
         request.setDescription(payment.getDescription());
 
-        // Increment retry count
         payment.setRetryCount(payment.getRetryCount() + 1);
         paymentRepository.save(payment);
-
-        log.info("Retrying payment: {}, Retry count: {}", paymentId, payment.getRetryCount());
         return initiatePayment(request);
     }
 
     @Override
     public RevenueStatisticsResponse getMonthlyRevenue() {
         List<Payment> payments = paymentRepository.findAll();
-
-        int currentYear = LocalDateTime.now().getYear();
+        int currentYear  = LocalDateTime.now().getYear();
         int currentMonth = LocalDateTime.now().getMonthValue();
-
-        // Last month (handle January → December of previous year)
-        int lastMonth = currentMonth == 1 ? 12 : currentMonth - 1;
+        int lastMonth     = currentMonth == 1 ? 12 : currentMonth - 1;
         int lastMonthYear = currentMonth == 1 ? currentYear - 1 : currentYear;
 
-        // Filter only successful payments of this month, divide by 100 (cents → dollars)
-        double thisMonthRevenue = payments.stream()
+        double thisMonth = payments.stream()
                 .filter(Payment::isSuccessful)
-                .filter(p -> p.getCreatedAt() != null &&
-                        p.getCreatedAt().getYear() == currentYear &&
-                        p.getCreatedAt().getMonthValue() == currentMonth)
-                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0)
-                .sum();
+                .filter(p -> p.getCreatedAt() != null
+                        && p.getCreatedAt().getYear() == currentYear
+                        && p.getCreatedAt().getMonthValue() == currentMonth)
+                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0).sum();
 
-        // Filter successful payments of last month, divide by 100
-        double lastMonthRevenue = payments.stream()
+        double lastMonthRev = payments.stream()
                 .filter(Payment::isSuccessful)
-                .filter(p -> p.getCreatedAt() != null &&
-                        p.getCreatedAt().getYear() == lastMonthYear &&
-                        p.getCreatedAt().getMonthValue() == lastMonth)
-                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0)
-                .sum();
+                .filter(p -> p.getCreatedAt() != null
+                        && p.getCreatedAt().getYear() == lastMonthYear
+                        && p.getCreatedAt().getMonthValue() == lastMonth)
+                .mapToDouble(p -> p.getAmount().doubleValue() / 100.0).sum();
 
-        // Calculate percentage change vs last month
-        double percentageChange = 0;
-        if (lastMonthRevenue > 0) {
-            percentageChange = ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100.0;
-        } else if (thisMonthRevenue > 0) {
-            percentageChange = 100.0; // new revenue this month, none last month
-        }
+        double pctChange = lastMonthRev > 0
+                ? ((thisMonth - lastMonthRev) / lastMonthRev) * 100.0
+                : (thisMonth > 0 ? 100.0 : 0.0);
 
-        // Determine currency (default to USD)
         String currency = payments.stream()
-                .filter(Payment::isSuccessful)
-                .map(Payment::getCurrency)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse("USD");
+                .filter(Payment::isSuccessful).map(Payment::getCurrency)
+                .filter(Objects::nonNull).findFirst().orElse("USD");
 
-        // Build response
-        RevenueStatisticsResponse response = new RevenueStatisticsResponse();
-        response.setMonthlyRevenue(thisMonthRevenue);
-        response.setLastMonthRevenue(lastMonthRevenue);
-        response.setRevenuePercentageChange(percentageChange);
-        response.setCurrency(currency);
-        response.setYear(currentYear);
-        response.setMonth(currentMonth);
-
-        return response;
+        RevenueStatisticsResponse res = new RevenueStatisticsResponse();
+        res.setMonthlyRevenue(thisMonth);
+        res.setLastMonthRevenue(lastMonthRev);
+        res.setRevenuePercentageChange(pctChange);
+        res.setCurrency(currency);
+        res.setYear(currentYear);
+        res.setMonth(currentMonth);
+        return res;
     }
 
-
-    /**
-     * Handle Razorpay webhook for payment updates
-     * Called when Razorpay sends webhook notifications for payment events
-     */
-    public void handleRazorpayWebhook(JSONObject webhookPayload) {
-        try {
-            String event = webhookPayload.getString("event");
-            log.info("Processing Razorpay webhook event: {}", event);
-
-            if ("payment.captured".equals(event) || "payment_link.paid".equals(event)) {
-                JSONObject payload = webhookPayload.getJSONObject("payload");
-                JSONObject paymentEntity = payload.getJSONObject("payment").getJSONObject("entity");
-
-                String gatewayPaymentId = paymentEntity.getString("id");
-
-                // Try to find payment by transaction ID or notes
-                Payment payment = null;
-
-                if (paymentEntity.has("notes")) {
-                    JSONObject notes = paymentEntity.getJSONObject("notes");
-                    if (notes.has("payment_id")) {
-                        Long paymentId = notes.getLong("payment_id");
-                        payment = paymentRepository.findById(paymentId).orElse(null);
-                    }
-                }
-
-                if (payment != null && payment.getStatus() != PaymentStatus.SUCCESS) {
-                    payment.setStatus(PaymentStatus.SUCCESS);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setGatewayPaymentId(gatewayPaymentId);
-
-                    // Extract payment method
-                    if (paymentEntity.has("method")) {
-                        payment.setPaymentMethod(paymentEntity.getString("method"));
-                    }
-
-                    payment = paymentRepository.save(payment);
-                    log.info("Payment {} marked as successful via webhook", payment.getId());
-
-                    // Publish payment success event (instead of direct service calls)
-                    publishPaymentSuccessEvent(payment);
-                }
-            } else if ("payment.failed".equals(event)) {
-                // Handle failed payment
-                JSONObject payload = webhookPayload.getJSONObject("payload");
-                JSONObject paymentEntity = payload.getJSONObject("payment").getJSONObject("entity");
-
-                if (paymentEntity.has("notes")) {
-                    JSONObject notes = paymentEntity.getJSONObject("notes");
-                    if (notes.has("payment_id")) {
-                        Long paymentId = notes.getLong("payment_id");
-                        Payment payment = paymentRepository.findById(paymentId).orElse(null);
-
-                        if (payment != null && payment.isPending()) {
-                            payment.setStatus(PaymentStatus.FAILED);
-                            payment.setFailureReason(paymentEntity.optString("error_description", "Payment failed"));
-                            payment = paymentRepository.save(payment);
-                            log.info("Payment {} marked as failed via webhook", payment.getId());
-
-                            // Publish payment failed event
-                            publishPaymentFailedEvent(payment);
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            log.error("Error processing Razorpay webhook: {}", e.getMessage(), e);
-        }
+    private void publishPaymentInitiatedEvent(Payment p, String checkoutUrl) {
+        paymentEventPublisher.publishPaymentInitiated(PaymentInitiatedEvent.builder()
+                .paymentId(p.getId()).userId(p.getUser().getId())
+                .paymentType(p.getPaymentType()).gateway(p.getGateway())
+                .amount(p.getAmount()).currency(p.getCurrency())
+                .subscriptionId(p.getSubscription() != null ? p.getSubscription().getId() : null)
+                .fineId(p.getFine() != null ? p.getFine().getId() : null)
+                .bookLoanId(p.getBookLoan() != null ? p.getBookLoan().getId() : null)
+                .transactionId(p.getTransactionId()).initiatedAt(p.getInitiatedAt())
+                .description(p.getDescription()).checkoutUrl(checkoutUrl)
+                .userEmail(p.getUser().getEmail()).userName(p.getUser().getFullName())
+                .build());
     }
 
-    /**
-     * Publish payment initiated event to notify other services.
-     * This can be used for tracking and sending initial notifications.
-     *
-     * @param payment The initiated payment
-     * @param checkoutUrl The URL for user to complete payment
-     */
-    private void publishPaymentInitiatedEvent(Payment payment, String checkoutUrl) {
-        PaymentInitiatedEvent event = PaymentInitiatedEvent.builder()
-            .paymentId(payment.getId())
-            .userId(payment.getUser().getId())
-            .paymentType(payment.getPaymentType())
-            .gateway(payment.getGateway())
-            .amount(payment.getAmount())
-            .currency(payment.getCurrency())
-            .subscriptionId(payment.getSubscription() != null ? payment.getSubscription().getId() : null)
-            .fineId(payment.getFine() != null ? payment.getFine().getId() : null)
-            .bookLoanId(payment.getBookLoan() != null ? payment.getBookLoan().getId() : null)
-            .transactionId(payment.getTransactionId())
-            .initiatedAt(payment.getInitiatedAt())
-            .description(payment.getDescription())
-            .checkoutUrl(checkoutUrl)
-            .userEmail(payment.getUser().getEmail())
-            .userName(payment.getUser().getFullName())
-            .build();
-
-        paymentEventPublisher.publishPaymentInitiated(event);
+    private void publishPaymentSuccessEvent(Payment p) {
+        paymentEventPublisher.publishPaymentSuccess(PaymentSuccessEvent.builder()
+                .paymentId(p.getId()).userId(p.getUser().getId())
+                .paymentType(p.getPaymentType()).amount(p.getAmount()).currency(p.getCurrency())
+                .subscriptionId(p.getSubscription() != null ? p.getSubscription().getId() : null)
+                .fineId(p.getFine() != null ? p.getFine().getId() : null)
+                .bookLoanId(p.getBookLoan() != null ? p.getBookLoan().getId() : null)
+                .gatewayPaymentId(p.getGatewayPaymentId()).transactionId(p.getTransactionId())
+                .completedAt(p.getCompletedAt()).description(p.getDescription())
+                .build());
     }
 
-    /**
-     * Publish payment success event to notify other services.
-     * This decouples payment processing from domain-specific actions.
-     *
-     * @param payment The successful payment
-     */
-    private void publishPaymentSuccessEvent(Payment payment) {
-        PaymentSuccessEvent event = PaymentSuccessEvent.builder()
-            .paymentId(payment.getId())
-            .userId(payment.getUser().getId())
-            .paymentType(payment.getPaymentType())
-            .amount(payment.getAmount())
-            .currency(payment.getCurrency())
-            .subscriptionId(payment.getSubscription() != null ? payment.getSubscription().getId() : null)
-            .fineId(payment.getFine() != null ? payment.getFine().getId() : null)
-            .bookLoanId(payment.getBookLoan() != null ? payment.getBookLoan().getId() : null)
-            .gatewayPaymentId(payment.getGatewayPaymentId())
-            .transactionId(payment.getTransactionId())
-            .completedAt(payment.getCompletedAt())
-            .description(payment.getDescription())
-            .build();
-
-        paymentEventPublisher.publishPaymentSuccess(event);
-    }
-
-    /**
-     * Publish payment failed event to notify other services.
-     * This allows services to react to failures (e.g., send notifications, log errors).
-     *
-     * @param payment The failed payment
-     */
-    private void publishPaymentFailedEvent(Payment payment) {
-        PaymentFailedEvent event = PaymentFailedEvent.builder()
-            .paymentId(payment.getId())
-            .userId(payment.getUser().getId())
-            .paymentType(payment.getPaymentType())
-            .amount(payment.getAmount())
-            .currency(payment.getCurrency())
-            .subscriptionId(payment.getSubscription() != null ? payment.getSubscription().getId() : null)
-            .fineId(payment.getFine() != null ? payment.getFine().getId() : null)
-            .bookLoanId(payment.getBookLoan() != null ? payment.getBookLoan().getId() : null)
-            .failureReason(payment.getFailureReason())
-            .gatewayPaymentId(payment.getGatewayPaymentId())
-            .transactionId(payment.getTransactionId())
-            .failedAt(LocalDateTime.now())
-            .description(payment.getDescription())
-            .userEmail(payment.getUser().getEmail())
-            .userName(payment.getUser().getFullName())
-            .build();
-
-        paymentEventPublisher.publishPaymentFailed(event);
+    private void publishPaymentFailedEvent(Payment p) {
+        paymentEventPublisher.publishPaymentFailed(PaymentFailedEvent.builder()
+                .paymentId(p.getId()).userId(p.getUser().getId())
+                .paymentType(p.getPaymentType()).amount(p.getAmount()).currency(p.getCurrency())
+                .subscriptionId(p.getSubscription() != null ? p.getSubscription().getId() : null)
+                .fineId(p.getFine() != null ? p.getFine().getId() : null)
+                .bookLoanId(p.getBookLoan() != null ? p.getBookLoan().getId() : null)
+                .failureReason(p.getFailureReason()).gatewayPaymentId(p.getGatewayPaymentId())
+                .transactionId(p.getTransactionId()).failedAt(LocalDateTime.now())
+                .description(p.getDescription())
+                .userEmail(p.getUser().getEmail()).userName(p.getUser().getFullName())
+                .build());
     }
 }

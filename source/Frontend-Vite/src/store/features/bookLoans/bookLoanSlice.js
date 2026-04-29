@@ -167,7 +167,13 @@ const bookLoanSlice = createSlice({
       })
       .addCase(fetchMyBookLoans.fulfilled, (state, action) => {
         state.loading = false;
-        state.myLoans = action.payload.data.content || [];
+        const content = action.payload.data.content || [];
+        const seen = new Set();
+        state.myLoans = content.filter(l => {
+          if (seen.has(l.id)) return false;
+          seen.add(l.id);
+          return true;
+        });
         state.totalElements = action.payload.data.totalElements || 0;
         state.totalPages = action.payload.data.totalPages || 0;
         state.currentPage = action.payload.data.number || 0;

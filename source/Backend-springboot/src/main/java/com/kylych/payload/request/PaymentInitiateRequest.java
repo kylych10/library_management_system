@@ -26,7 +26,7 @@ public class PaymentInitiateRequest {
     private PaymentType paymentType;
 
     @NotNull(message = "Payment gateway is mandatory")
-    private PaymentGateway gateway; // RAZORPAY or STRIPE
+    private PaymentGateway gateway;
 
     @NotNull(message = "Amount is mandatory")
     @Positive(message = "Amount must be positive")

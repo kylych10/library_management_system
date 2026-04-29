@@ -41,6 +41,11 @@ import AdminDashboard from "./Admin/pages/AdminDashboard";
 import AdminFinesPage from "./Admin/pages/fines/AdminFinesPage";
 import WishlistPage from "./pages/Wishlist/WishlistPage";
 import FriendsPage from "./pages/Friends/FriendsPage";
+import ExchangePage from "./pages/Exchange/ExchangePage";
+import PublicBooksPage from "./pages/PublicBooksPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+const AdminExchangePage = React.lazy(() => import("./Admin/pages/exchange/AdminExchangePage"));
 
 // Lazy load admin pages
 const AdminBooksPage = React.lazy(() => import("./Admin/pages/books/AdminBooksPage"));
@@ -76,9 +81,15 @@ function App() {
   return (
       <Routes>
         {/* Public Routes - Always accessible */}
+        {/* Always-public routes */}
+        <Route path="/books-public" element={<PublicBooksPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
         {!isAuthenticated && (
             <>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/books" element={<PublicBooksPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -102,6 +113,7 @@ function App() {
               <Route path="/admin/payments" element={<AdminPaymentsPage />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />
               <Route path="/admin/fines" element={<AdminFinesPage />} />
+              <Route path="/admin/exchange" element={<React.Suspense fallback={<div>Loading...</div>}><AdminExchangePage /></React.Suspense>} />
               <Route path="/admin/notifications" element={<NotificationPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
               <Route path="/admin/profile" element={<AdminProfilePage />} />
@@ -128,6 +140,7 @@ function App() {
               <Route path="/subscriptions" element={<SubscriptionsPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/friends" element={<FriendsPage />} />
+              <Route path="/exchange" element={<ExchangePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/notifications" element={<NotificationPage />} />

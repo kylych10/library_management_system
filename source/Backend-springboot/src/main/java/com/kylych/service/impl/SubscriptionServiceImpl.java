@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.kylych.domain.PaymentGateway;
 import com.kylych.domain.PaymentStatus;
 import com.kylych.domain.PaymentType;
-import java.util.List;
+
 import java.util.UUID;
 import com.kylych.exception.PaymentException;
 import com.kylych.exception.SubscriptionException;
@@ -33,7 +33,6 @@ import com.kylych.repository.UserRepository;
 import com.kylych.service.PaymentService;
 import com.kylych.service.SubscriptionService;
 import com.kylych.service.UserService;
-import com.kylych.service.gateway.RazorpayService;
 import com.kylych.service.gateway.StripeService;
 
 import jakarta.transaction.Transactional;
@@ -54,7 +53,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final SubscriptionMapper subscriptionMapper;
-    private final RazorpayService razorpayService;
     private final StripeService stripeService;
     private final UserService userService;
     private final PaymentService paymentService;

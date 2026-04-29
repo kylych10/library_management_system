@@ -125,13 +125,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    /**
-     * Handle illegal argument exceptions
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse(ex.getMessage(),false));
+                .body(new ApiResponse(ex.getMessage(), false));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse> handleIllegalStateException(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse(ex.getMessage(), false));
     }
 
     /**

@@ -13,6 +13,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   Receipt as ReceiptIcon,
   People as PeopleIcon,
+  SwapHoriz as SwapIcon,
 } from "@mui/icons-material";
 
 import React from "react";
@@ -83,5 +84,11 @@ export const navigationItems = [
     path: '/friends',
     icon: <PeopleIcon />,
     description: 'Friends & Messages',
+  },
+  {
+    title: 'Book Exchange',
+    path: '/exchange',
+    icon: <SwapIcon />,
+    description: 'Share & Borrow',
   },
 ];

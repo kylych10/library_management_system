@@ -1,10 +1,11 @@
 package com.kylych.controller;
 
 import com.kylych.exception.UserException;
+import com.kylych.exchange.model.UserReputation;
+import com.kylych.exchange.repository.UserReputationRepository;
 import com.kylych.mapper.UserMapper;
 import com.kylych.modal.User;
-
-
+import com.kylych.payload.dto.PublicProfileDTO;
 import com.kylych.payload.dto.UserDTO;
 import com.kylych.payload.request.UpdateProfileRequest;
 import com.kylych.service.UserService;
@@ -28,6 +29,7 @@ import java.util.List;
 public class UserController {
 
 	private final UserService userService;
+	private final UserReputationRepository reputationRepository;
 
 
 
@@ -69,8 +71,29 @@ public class UserController {
 	) throws UserException {
 		User user = userService.getUserById(userId);
 		UserDTO userDTO=UserMapper.toDTO(user);
-
 		return new ResponseEntity<>(userDTO,HttpStatus.OK);
+	}
+
+	@GetMapping("/api/users/{userId}/public-profile")
+	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	public ResponseEntity<PublicProfileDTO> getPublicProfile(@PathVariable Long userId) throws UserException {
+		User user = userService.getUserById(userId);
+		var rep = reputationRepository.findByUserId(userId);
+		PublicProfileDTO dto = PublicProfileDTO.builder()
+				.id(user.getId())
+				.fullName(user.getFullName())
+				.profileImage(user.getProfileImage())
+				.phone(user.getPhone())
+				.memberSince(user.getCreatedAt())
+				.lastLogin(user.getLastLogin())
+				.verified(user.getVerified())
+				.reputationScore(rep.map(UserReputation::getReputationScore).orElse(5.0))
+				.totalExchanges(rep.map(UserReputation::getTotalExchanges).orElse(0))
+				.totalBorrows(rep.map(UserReputation::getTotalBorrows).orElse(0))
+				.penaltyPoints(rep.map(UserReputation::getPenaltyPoints).orElse(0))
+				.blockedFromExchange(rep.map(UserReputation::getBlockedFromExchange).orElse(false))
+				.build();
+		return ResponseEntity.ok(dto);
 	}
 
 	/**

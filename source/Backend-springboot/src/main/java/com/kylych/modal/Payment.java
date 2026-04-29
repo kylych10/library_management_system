@@ -112,15 +112,9 @@ public class Payment {
     @Column(name = "gateway_payment_id", length = 255)
     private String gatewayPaymentId;
 
-    /**
-     * Gateway order ID (Razorpay specific)
-     */
     @Column(name = "gateway_order_id", length = 255)
     private String gatewayOrderId;
 
-    /**
-     * Gateway signature for verification (Razorpay specific)
-     */
     @Column(name = "gateway_signature", length = 512)
     private String gatewaySignature;
 

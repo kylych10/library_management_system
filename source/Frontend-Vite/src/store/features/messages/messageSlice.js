@@ -16,7 +16,14 @@ const messageSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchConversations.fulfilled, (state, action) => { state.conversations = action.payload; })
-      .addCase(fetchConversation.fulfilled, (state, action) => { state.activeConversation = action.payload; })
+      .addCase(fetchConversation.fulfilled, (state, action) => {
+        state.activeConversation = action.payload;
+        // Backend marks messages as read when conversation is fetched — mirror that in the store
+        state.conversations = state.conversations.map(c =>
+          c.partner?.id === action.payload.userId ? { ...c, unreadCount: 0 } : c
+        );
+        state.unreadCount = state.conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.activeConversation.messages.push(action.payload);
       })

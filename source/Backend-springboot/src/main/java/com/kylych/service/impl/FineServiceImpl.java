@@ -151,7 +151,7 @@ public class FineServiceImpl implements FineService {
                 .userId(currentUser.getId())
                 .fineId(fine.getId())
                 .paymentType(PaymentType.FINE)
-                .gateway(PaymentGateway.RAZORPAY)
+                .gateway(PaymentGateway.STRIPE)
                 .amount(fine.getAmountOutstanding())
                 .currency("INR")
                 .description("Library fine payment for fine ID " + fine.getId())

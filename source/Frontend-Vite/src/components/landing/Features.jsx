@@ -60,7 +60,7 @@ const Features = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Why Choose{' '}
             <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              this Library
+              Kitep Space
             </span>
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">

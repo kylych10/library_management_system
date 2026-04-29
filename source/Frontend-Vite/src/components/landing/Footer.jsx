@@ -64,7 +64,7 @@ const Footer = () => {
                 <MenuBookIcon sx={{ fontSize: 24, color: 'white' }} />
               </div>
               <span className="text-2xl font-bold text-white">
-                The Library
+                Kitep Space
               </span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-sm">
@@ -181,7 +181,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {currentYear} The Library. All rights reserved.
+              © {currentYear} Kitep Space. All rights reserved.
             </p>
 
             {/* Social Links */}

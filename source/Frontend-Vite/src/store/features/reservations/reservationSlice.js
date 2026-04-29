@@ -159,11 +159,14 @@ const reservationSlice = createSlice({
       })
       .addCase(getMyReservations.fulfilled, (state, action) => {
         state.loading = false;
-        // Check if it's active reservations or all reservations based on content
-        
-          state.reservations = action.payload.content;
-        
-
+        const content = action.payload.content || [];
+        // Deduplicate by id to prevent duplicate key warnings
+        const seen = new Set();
+        state.reservations = content.filter(r => {
+          if (seen.has(r.id)) return false;
+          seen.add(r.id);
+          return true;
+        });
         state.totalElements = action.payload.totalElements;
         state.totalPages = action.payload.totalPages;
         state.currentPage = action.payload.number;

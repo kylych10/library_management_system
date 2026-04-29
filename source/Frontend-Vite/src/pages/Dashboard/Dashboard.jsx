@@ -40,11 +40,16 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const dispatch = useDispatch();
   const { auth } = useSelector((store) => store);
-  const { myLoans, activeLoans } = useSelector((store) => store.bookLoans);
+  const { myLoans } = useSelector((store) => store.bookLoans);
   const { reservations } = useSelector((store) => store.reservations);
 
   const READING_GOAL = 30;
   const currentYear = new Date().getFullYear();
+
+  // Derive active loans from already-fetched myLoans — no extra API call
+  const activeLoans = myLoans.filter(l =>
+    l.status === 'CHECKED_OUT' || l.status === 'OVERDUE'
+  );
 
   const booksRead = myLoans.filter((loan) => {
     if (!loan.returnDate) return false;
@@ -53,7 +58,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(fetchMyBookLoans({ status: null, page: 0, size: 100 }));
-    dispatch(fetchMyBookLoans({ status: 'ACTIVE', page: 0, size: 100 }));
     dispatch(getMyReservations({ page: 0, size: 100 }));
   }, [auth.user]);
 

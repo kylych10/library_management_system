@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
+import UserProfileModal from '../../components/user/UserProfileModal';
+import api from '../../utils/api';
 import {
   Box, Container, Typography, Tabs, Tab, Avatar, Button, TextField,
   InputAdornment, CircularProgress, Chip, Badge, IconButton, Paper,
@@ -29,6 +32,7 @@ import { clearActiveConversation } from '../../store/features/messages/messageSl
 
 export default function FriendsPage() {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
   const { user } = useSelector(s => s.auth);
   const { friends, pendingRequests, sentRequests, searchResults, searchLoading } = useSelector(s => s.friends);
   const { conversations, activeConversation, unreadCount } = useSelector(s => s.messages);
@@ -37,8 +41,10 @@ export default function FriendsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPartner, setChatPartner] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [profileUserId, setProfileUserId] = useState(null);
   const messagesEndRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
@@ -49,13 +55,25 @@ export default function FriendsPage() {
     dispatch(fetchConversations());
   }, [dispatch]);
 
+  // Handle ?userId= from UserProfileModal "Message" button
+  useEffect(() => {
+    const targetId = searchParams.get('userId');
+    if (!targetId) return;
+    api.get(`/api/users/${targetId}/public-profile`)
+      .then(r => {
+        const p = r.data;
+        openChat({ id: p.id, fullName: p.fullName, profileImage: p.profileImage, email: '' });
+      })
+      .catch(console.error);
+  }, [searchParams]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [activeConversation.messages]);
 
-  // Poll for new messages when chat is open
+  // Poll for new messages silently (no loading spinner on poll)
   useEffect(() => {
     if (!chatPartner) return;
     const interval = setInterval(() => {
@@ -63,6 +81,9 @@ export default function FriendsPage() {
     }, 3000);
     return () => clearInterval(interval);
   }, [chatPartner, dispatch]);
+
+  // Reset loading when partner changes
+  useEffect(() => { setChatLoading(false); }, [chatPartner?.id]);
 
   const handleSearch = (q) => {
     setSearchQuery(q);
@@ -101,11 +122,13 @@ export default function FriendsPage() {
     } catch (e) { showSnackbar('Failed', 'error'); }
   };
 
-  const openChat = (partner) => {
+  const openChat = async (partner) => {
     setChatPartner(partner);
     setChatOpen(true);
-    dispatch(fetchConversation(partner.id));
     setTab(3);
+    setChatLoading(true);
+    await dispatch(fetchConversation(partner.id));
+    setChatLoading(false);
   };
 
   const handleSendMessage = async () => {
@@ -132,9 +155,11 @@ export default function FriendsPage() {
     const alreadySent = isSentRequest(u.id);
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 1.5 }}>
-        <Avatar src={u.profileImage} sx={{ width: 48, height: 48, bgcolor: '#4F46E5' }}>{getInitials(u.fullName)}</Avatar>
+        <Avatar src={u.profileImage} sx={{ width: 48, height: 48, bgcolor: '#4F46E5', cursor: 'pointer' }}
+          onClick={() => setProfileUserId(u.id)}>{getInitials(u.fullName)}</Avatar>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle2" fontWeight={600}>{u.fullName}</Typography>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ cursor: 'pointer', '&:hover': { color: '#4F46E5' } }}
+            onClick={() => setProfileUserId(u.id)}>{u.fullName}</Typography>
           <Typography variant="caption" color="text.secondary">{u.email}</Typography>
         </Box>
         {alreadyFriend ? (
@@ -156,9 +181,11 @@ export default function FriendsPage() {
     const friendUser = getFriendUser(friendship);
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 1.5 }}>
-        <Avatar src={friendUser?.profileImage} sx={{ width: 48, height: 48, bgcolor: '#10B981' }}>{getInitials(friendUser?.fullName)}</Avatar>
+        <Avatar src={friendUser?.profileImage} sx={{ width: 48, height: 48, bgcolor: '#10B981', cursor: 'pointer' }}
+          onClick={() => setProfileUserId(friendUser?.id)}>{getInitials(friendUser?.fullName)}</Avatar>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle2" fontWeight={600}>{friendUser?.fullName}</Typography>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ cursor: 'pointer', '&:hover': { color: '#4F46E5' } }}
+            onClick={() => setProfileUserId(friendUser?.id)}>{friendUser?.fullName}</Typography>
           <Typography variant="caption" color="text.secondary">{friendUser?.email}</Typography>
         </Box>
         <IconButton size="small" onClick={() => openChat(friendUser)} sx={{ color: '#4F46E5' }}><ChatIcon /></IconButton>
@@ -170,9 +197,11 @@ export default function FriendsPage() {
   // Pending request card
   const RequestCard = ({ friendship }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 1.5 }}>
-      <Avatar src={friendship.requester?.profileImage} sx={{ width: 48, height: 48, bgcolor: '#F59E0B' }}>{getInitials(friendship.requester?.fullName)}</Avatar>
+      <Avatar src={friendship.requester?.profileImage} sx={{ width: 48, height: 48, bgcolor: '#F59E0B', cursor: 'pointer' }}
+        onClick={() => setProfileUserId(friendship.requester?.id)}>{getInitials(friendship.requester?.fullName)}</Avatar>
       <Box sx={{ flex: 1 }}>
-        <Typography variant="subtitle2" fontWeight={600}>{friendship.requester?.fullName}</Typography>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ cursor: 'pointer', '&:hover': { color: '#4F46E5' } }}
+          onClick={() => setProfileUserId(friendship.requester?.id)}>{friendship.requester?.fullName}</Typography>
         <Typography variant="caption" color="text.secondary">{friendship.requester?.email}</Typography>
       </Box>
       <IconButton size="small" onClick={() => handleAccept(friendship.id)} sx={{ color: 'success.main', bgcolor: 'success.lighter', mr: 0.5 }}><CheckIcon /></IconButton>
@@ -315,19 +344,31 @@ export default function FriendsPage() {
                 <>
                   {/* Chat header */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-                    <Avatar src={chatPartner.profileImage} sx={{ bgcolor: '#4F46E5' }}>{getInitials(chatPartner.fullName)}</Avatar>
-                    <Box>
-                      <Typography fontWeight={700}>{chatPartner.fullName}</Typography>
+                    <Avatar src={chatPartner.profileImage}
+                      sx={{ bgcolor: '#4F46E5', cursor: 'pointer' }}
+                      onClick={() => setProfileUserId(chatPartner.id)}>
+                      {getInitials(chatPartner.fullName)}
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography fontWeight={700} sx={{ cursor: 'pointer', '&:hover': { color: '#4F46E5' } }}
+                        onClick={() => setProfileUserId(chatPartner.id)}>
+                        {chatPartner.fullName}
+                      </Typography>
                       <Typography variant="caption" color="text.secondary">{chatPartner.email}</Typography>
                     </Box>
                   </Box>
 
                   {/* Messages */}
                   <Box sx={{ flex: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1, bgcolor: '#F9FAFB' }}>
-                    {activeConversation.messages.length === 0 && (
+                    {chatLoading ? (
+                      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2, py: 8 }}>
+                        <CircularProgress sx={{ color: '#4F46E5' }} size={36} />
+                        <Typography variant="body2" color="text.secondary">Loading messages…</Typography>
+                      </Box>
+                    ) : activeConversation.messages.length === 0 ? (
                       <Typography color="text.secondary" textAlign="center" mt={4}>No messages yet. Say hello!</Typography>
-                    )}
-                    {activeConversation.messages.map(msg => {
+                    ) : null}
+                    {!chatLoading && activeConversation.messages.map(msg => {
                       const isMe = msg.sender?.id === user?.id;
                       return (
                         <Box key={msg.id} sx={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
@@ -346,7 +387,7 @@ export default function FriendsPage() {
                         </Box>
                       );
                     })}
-                    <div ref={messagesEndRef} />
+                    {!chatLoading && <div ref={messagesEndRef} />}
                   </Box>
 
                   {/* Message input */}
@@ -371,6 +412,12 @@ export default function FriendsPage() {
           </Box>
         )}
       </Container>
+
+      <UserProfileModal
+        userId={profileUserId}
+        open={!!profileUserId}
+        onClose={() => setProfileUserId(null)}
+      />
 
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>{snackbar.message}</Alert>

@@ -85,7 +85,7 @@ const AppNavbar = () => {
               <MenuBookIcon sx={{ fontSize: 24, color: 'white' }} />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
-              Zosh Library
+              Kitep Space
             </span>
           </Link>
 

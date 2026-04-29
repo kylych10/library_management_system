@@ -13,6 +13,7 @@ import notificationReducer from './features/notification/notificationSlice';
 import fineReducer from './features/fines/fineSlice';
 import friendReducer from './features/friends/friendSlice';
 import messageReducer from './features/messages/messageSlice';
+import exchangeReducer from './features/exchange/exchangeSlice';
 
 /**
  * Redux store configuration for Library Management System
@@ -34,6 +35,7 @@ export const store = configureStore({
     fines: fineReducer,
     friends: friendReducer,
     messages: messageReducer,
+    exchange: exchangeReducer,
   },
 
 });
