@@ -32,7 +32,7 @@ public class CorsFixFilter implements Filter {
                 origin.equals("https://kylychlibrary.netlify.app") ||
                 origin.equals("http://localhost:5173") ||
                 origin.equals("http://localhost:3000") ||
-                origin.equals("http://localhost:5174")
+                origin.equals("http://localhost:5174") || origin.equals("https://kitep.space/")
         )) {
             response.setHeader("Access-Control-Allow-Origin",  origin);
             response.setHeader("Access-Control-Allow-Credentials", "true");
