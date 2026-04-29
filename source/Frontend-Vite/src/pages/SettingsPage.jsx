@@ -70,7 +70,7 @@ const SettingsPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
+      <div className="overflow-x-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8 animate-fade-in-up">

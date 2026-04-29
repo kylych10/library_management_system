@@ -1,54 +1,24 @@
 import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
-  Box,
-  Drawer,
-  AppBar,
-  Toolbar,
-  List,
-  Typography,
-  Divider,
-  IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Avatar,
-  Menu,
-  MenuItem,
-  Badge,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-  Chip,
+  Box, AppBar, Toolbar, IconButton, Typography, Avatar, Menu, MenuItem,
+  ListItemIcon, Divider, Tooltip, useTheme, useMediaQuery,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  MenuBook as MenuBookIcon,
-  EventNote as EventNoteIcon,
-  CardMembership as CardMembershipIcon,
-  Favorite as FavoriteIcon,
   Person as PersonIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
- 
-  Search as SearchIcon,
-  ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/features/auth/authSlice";
-import SidebarDrawer from "./SidebarDrawer";
-import { navigationItems } from "./navigationItems";
-import Sidebar from "./UserSidebar";
 import UserSidebar from "./UserSidebar";
+import { navigationItems } from "./navigationItems";
 import NotificationBell from "../notification/NotificationBell";
 import ThemeToggle from "../theme/ThemeToggle";
 import ChatAssistant from "../chat/ChatAssistant";
 
-const drawerWidth = 280;
-
-
+const DRAWER_WIDTH = 280;
 
 export default function UserLayout() {
   const theme = useTheme();
@@ -56,92 +26,63 @@ export default function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-
   const { user } = useSelector((state) => state.auth);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const pageTitle = navigationItems.find((item) => {
+    if (item.path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(item.path);
+  })?.title || "Dashboard";
 
   const handleLogout = () => {
+    setAnchorEl(null);
     dispatch(logout());
-    handleProfileMenuClose();
     navigate("/login");
   };
 
-  const handleNavigation = (path) => {
-    navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
-  };
-
-  const isActive = (path) => {
-    if (path === "/") {
-      return location.pathname === "/";
-    }
-    return location.pathname.startsWith(path);
-  };
-
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f5f7fa" }}>
-      {/* App Bar */}
+    <Box sx={{ display: "flex", minHeight: "100dvh", bgcolor: "background.default" }}>
       <AppBar
         position="fixed"
+        elevation={0}
         sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          bgcolor: "white",
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          ml:    { md: `${DRAWER_WIDTH}px` },
+          bgcolor: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(12px)",
           color: "text.primary",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
           <IconButton
-            color="inherit"
             edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: "none" } }}
+            onClick={() => setMobileOpen(true)}
+            sx={{ display: { md: "none" }, mr: 0.5 }}
+            color="inherit"
           >
             <MenuIcon />
           </IconButton>
-
           <Typography
             variant="h6"
             noWrap
-            component="div"
-            sx={{ flexGrow: 1, fontWeight: 600 }}
+            sx={{ flexGrow: 1, fontWeight: 700, fontSize: { xs: "1rem", sm: "1.1rem" } }}
           >
-            {navigationItems.find((item) => isActive(item.path))?.title ||
-              "Dashboard"}
+            {pageTitle}
           </Typography>
-
-          <Tooltip title="Search">
-            <IconButton>
-              <SearchIcon />
-            </IconButton>
-          </Tooltip>
-
           <NotificationBell />
-
-          <Box sx={{ ml: 2 }}>
+          <Box sx={{ display: { xs: "none", sm: "flex" } }}>
             <ThemeToggle />
           </Box>
-
           <Tooltip title="Account">
-            <IconButton onClick={handleProfileMenuOpen} sx={{ ml: 1 }}>
-              <Avatar src={user?.profileImage} sx={{ width: 36, height: 36 }}>
+            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }}>
+              <Avatar
+                src={user?.profileImage}
+                sx={{ width: 36, height: 36, bgcolor: "primary.main", fontSize: "0.9rem", fontWeight: 700 }}
+              >
                 {user?.fullName?.charAt(0)}
               </Avatar>
             </IconButton>
@@ -149,71 +90,57 @@ export default function UserLayout() {
         </Toolbar>
       </AppBar>
 
-      {/* Profile Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={handleProfileMenuClose}
+        onClose={() => setAnchorEl(null)}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        PaperProps={{ sx: { mt: 1.5, minWidth: 220, borderRadius: 3, boxShadow: 6 } }}
       >
-        <MenuItem
-          onClick={() => {
-            handleNavigation("/profile");
-            handleProfileMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <PersonIcon fontSize="small" />
-          </ListItemIcon>
-          Profile
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleNavigation("/settings");
-            handleProfileMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" />
-          </ListItemIcon>
-          Settings
-        </MenuItem>
+        <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Typography variant="subtitle2" fontWeight={700}>{user?.fullName}</Typography>
+          <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+        </Box>
+        {[
+          { icon: <PersonIcon fontSize="small" />,   label: "Profile",  path: "/profile"  },
+          { icon: <SettingsIcon fontSize="small" />, label: "Settings", path: "/settings" },
+        ].map(({ icon, label, path }) => (
+          <MenuItem key={path} onClick={() => { setAnchorEl(null); navigate(path); }} sx={{ py: 1.5 }}>
+            <ListItemIcon>{icon}</ListItemIcon>
+            {label}
+          </MenuItem>
+        ))}
         <Divider />
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" />
-          </ListItemIcon>
+        <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: "error.main" }}>
+          <ListItemIcon><LogoutIcon fontSize="small" color="error" /></ListItemIcon>
           Logout
         </MenuItem>
       </Menu>
 
-      {/* Drawer */}
-      {/* <Sidebar/> */}
       <UserSidebar
         mobileOpen={mobileOpen}
-        handleDrawerToggle={handleDrawerToggle}
+        handleDrawerToggle={() => setMobileOpen(false)}
         isMobile={isMobile}
         setMobileOpen={setMobileOpen}
-        handleProfileMenuClose={handleProfileMenuClose}
+        handleProfileMenuClose={() => setAnchorEl(null)}
       />
-      
-      {/* Main Content */}
+
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          minHeight: "100vh",
+          width: { xs: "100%", md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          minHeight: "100dvh",
+          overflowX: "hidden",
         }}
       >
-        <Toolbar />
-        <Box >
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
+        <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, py: { xs: 1.5, md: 2.5 }, pb: { xs: 4, md: 3 } }}>
           <Outlet />
         </Box>
       </Box>
 
-      {/* AI Chat Assistant */}
       <ChatAssistant />
     </Box>
   );

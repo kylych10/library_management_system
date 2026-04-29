@@ -127,21 +127,21 @@ const BooksPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      <div className="bg-white border-b border-gray-200 -mx-4 sm:-mx-6 md:-mx-8 mb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1">
             Browse Our{' '}
             <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Collection
             </span>
           </h1>
-          <p className="text-lg text-gray-600">Discover thousands of books across all genres</p>
+          <p className="text-base sm:text-lg text-gray-600">Discover thousands of books across all genres</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* ── Sidebar ─────────────────────────────────────────── */}

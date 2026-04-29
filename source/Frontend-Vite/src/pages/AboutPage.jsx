@@ -109,8 +109,8 @@ const AboutPage = () => (
               something online. We want every reader to feel empowered, connected, and inspired.
             </p>
             <Link to="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl">
-              Join Us Today <ArrowForwardIcon sx={{ fontSize: 18 }} />
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600  font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl">
+              <span className='text-white'>Join Us Today <ArrowForwardIcon sx={{ fontSize: 18 }} /></span>
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -160,8 +160,8 @@ const AboutPage = () => (
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/register"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-all shadow-lg">
-            Create Free Account <ArrowForwardIcon sx={{ fontSize: 18 }} />
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white  font-semibold rounded-xl hover:bg-indigo-50 transition-all shadow-lg">
+            <span className='text-indigo-600'>Create Free Account <ArrowForwardIcon sx={{ fontSize: 18 }} /></span>
           </Link>
           <Link to="/books"
             className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all">

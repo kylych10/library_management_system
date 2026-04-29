@@ -118,7 +118,7 @@ const PublicBooksPage = () => {
         <div className="mt-auto">
           <Link to="/register"
             className="block w-full text-center py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors">
-            Sign up to Borrow
+            <span className='text-white'>Sign up to Borrow</span>
           </Link>
         </div>
       </div>
@@ -250,14 +250,15 @@ const PublicBooksPage = () => {
           <p className="text-indigo-100 mb-8 text-lg">
             Create a free account and borrow books from our collection today.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center text-indigo-600">
             <Link to="/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-all shadow-lg">
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white  font-semibold rounded-xl hover:bg-indigo-50 transition-all shadow-lg">
               Get Started Free <ArrowForwardIcon sx={{ fontSize: 18 }} />
             </Link>
             <Link to="/login"
-              className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all">
-              Sign In
+              className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white  font-semibold rounded-xl hover:bg-white/10 transition-all">
+              <span className='text-white'>Sign In</span>
+              
             </Link>
           </div>
         </div>

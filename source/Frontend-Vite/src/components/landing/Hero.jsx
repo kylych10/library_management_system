@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import React from "react";
+import { Link } from "react-router-dom";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 
 const Hero = () => {
   return (
@@ -26,7 +26,7 @@ const Hero = () => {
 
             {/* Main Heading */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6 animate-fade-in-up animation-delay-200">
-              Your Gateway to{' '}
+              Your Gateway to{" "}
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 Endless Knowledge
               </span>
@@ -34,8 +34,9 @@ const Hero = () => {
 
             {/* Subheading */}
             <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl animate-fade-in-up animation-delay-400">
-              Discover, reserve, and enjoy thousands of books from our extensive collection.
-              Join our community of readers and experience seamless library management.
+              Discover, reserve, and enjoy thousands of books from our extensive
+              collection. Join our community of readers and experience seamless
+              library management.
             </p>
 
             {/* CTA Buttons */}
@@ -44,15 +45,22 @@ const Hero = () => {
                 to="/books"
                 className="group inline-flex items-center justify-center px-8 py-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <span>Explore Books</span>
-                <ArrowForwardIcon className="ml-2 group-hover:translate-x-1 transition-transform" sx={{ fontSize: 20 }} />
+                <span className="text-white">
+                  Explore Books{" "}
+                  <ArrowForwardIcon
+                    className="ml-2 group-hover:translate-x-1 transition-transform"
+                    sx={{ fontSize: 20 }}
+                  />
+                </span>
               </Link>
               <Link
                 to="/login"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl border-2 border-indigo-600 hover:bg-indigo-50 transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                <MenuBookIcon className="mr-2" sx={{ fontSize: 20 }} />
-                <span>Login</span>
+                <span className="text-indigo-600">
+                  <MenuBookIcon className="mr-2" sx={{ fontSize: 20 }} />
+                  Login
+                </span>
               </Link>
             </div>
 

@@ -534,8 +534,8 @@ export default function ExchangePage() {
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="overflow-x-hidden">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

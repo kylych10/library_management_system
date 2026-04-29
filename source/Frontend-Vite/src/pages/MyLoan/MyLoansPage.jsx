@@ -145,7 +145,7 @@ const MyLoansPage = () => {
   if (loading && myLoans.length === 0) {
     return (
       
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8">
+        <div className="overflow-x-hidden">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-8">
               <div className="h-10 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
@@ -170,7 +170,7 @@ const MyLoansPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-6 sm:py-8">
+      <div className="overflow-x-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8 animate-fade-in-up">

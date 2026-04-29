@@ -65,8 +65,8 @@ const Dashboard = () => {
   const statsData = statsConfig({ myLoans: activeLoans, reservations, booksRead, readingStreak: 0 });
   return (
   
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-500 py-6 sm:py-8 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="overflow-x-hidden">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6 sm:mb-8 animate-fade-in-up">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">

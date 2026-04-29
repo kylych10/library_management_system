@@ -395,7 +395,7 @@ const BookDetailsPage = () => {
 
   return (
     <Layout>
-      <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+      <div className="overflow-x-hidden">
         {/* Header with Back Button */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

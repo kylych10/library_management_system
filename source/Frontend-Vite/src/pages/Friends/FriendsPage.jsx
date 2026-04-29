@@ -12,6 +12,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import PeopleIcon from '@mui/icons-material/People';
@@ -223,8 +224,8 @@ export default function FriendsPage() {
   );
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ maxWidth: 1280, mx: 'auto' }}>
+      <Box>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight={800} sx={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -309,9 +310,9 @@ export default function FriendsPage() {
 
         {/* Tab 3: Messages */}
         {tab === 3 && (
-          <Box sx={{ display: 'flex', gap: 2, height: '65vh' }}>
+          <Box sx={{ display: 'flex', gap: 2, height: { xs: 'calc(100dvh - 220px)', md: '65vh' }, minHeight: 400 }}>
             {/* Conversation list */}
-            <Box sx={{ width: 320, flexShrink: 0, overflowY: 'auto' }}>
+            <Box sx={{ width: { xs: chatPartner ? 0 : '100%', sm: 280, md: 320 }, flexShrink: 0, overflowY: 'auto', display: { xs: chatPartner ? 'none' : 'block', sm: 'block' } }}>
               <Typography variant="subtitle1" fontWeight={600} mb={2}>Conversations</Typography>
               {conversations.length === 0 ? (
                 <Typography color="text.secondary" variant="body2">No conversations yet. Message a friend!</Typography>
@@ -344,6 +345,10 @@ export default function FriendsPage() {
                 <>
                   {/* Chat header */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                    {/* Back button — mobile only */}
+                    <IconButton size="small" sx={{ display: { sm: 'none' } }} onClick={() => setChatPartner(null)}>
+                      <ChevronLeftIcon />
+                    </IconButton>
                     <Avatar src={chatPartner.profileImage}
                       sx={{ bgcolor: '#4F46E5', cursor: 'pointer' }}
                       onClick={() => setProfileUserId(chatPartner.id)}>
@@ -411,7 +416,7 @@ export default function FriendsPage() {
             </Box>
           </Box>
         )}
-      </Container>
+      </Box>
 
       <UserProfileModal
         userId={profileUserId}

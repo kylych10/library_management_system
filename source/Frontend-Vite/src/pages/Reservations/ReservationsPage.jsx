@@ -180,7 +180,7 @@ const ReservationsPage = () => {
   );
 
   return (
-    <div className="min-h-screen py-6 sm:py-8">
+    <div className="overflow-x-hidden">
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -188,7 +188,7 @@ const ReservationsPage = () => {
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
       `}</style>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8 animate-fade-in-up flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
