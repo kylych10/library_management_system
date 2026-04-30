@@ -1,257 +1,414 @@
-# Kitep Space — User Guide
+<div align="center">
 
-**Live:** [https://kitep.space](https://kitep.space)
+# 📚 Kitep Space — User Guide
 
-This guide covers all features available to library members on the Kitep Space platform.
+[![Live Demo](https://img.shields.io/badge/🌐%20Open%20App-kitep.space-4F46E5?style=for-the-badge)](https://kitep.space)
 
----
+*Everything you need to know to get the most out of Kitep Space*
 
-## Table of Contents
-
-1. [Getting Started](#1-getting-started)
-2. [Browsing Books](#2-browsing-books)
-3. [Borrowing Books](#3-borrowing-books)
-4. [Reservations](#4-reservations)
-5. [Fines](#5-fines)
-6. [Subscriptions](#6-subscriptions)
-7. [Wishlist and Reviews](#7-wishlist-and-reviews)
-8. [P2P Book Exchange](#8-p2p-book-exchange)
-9. [Friends and Messaging](#9-friends-and-messaging)
-10. [User Profiles](#10-user-profiles)
-11. [AI Assistant](#11-ai-assistant)
-12. [Settings and Profile](#12-settings-and-profile)
+</div>
 
 ---
 
-## 1. Getting Started
+## 📋 Table of Contents
+
+| # | Section |
+|:---:|:---|
+| 1 | [🚀 Getting Started](#1--getting-started) |
+| 2 | [🔍 Browsing Books](#2--browsing-books) |
+| 3 | [📖 Borrowing Books](#3--borrowing-books) |
+| 4 | [📅 Reservations](#4--reservations) |
+| 5 | [💰 Fines](#5--fines) |
+| 6 | [🏷️ Subscriptions](#6-️-subscriptions) |
+| 7 | [⭐ Wishlist & Reviews](#7--wishlist--reviews) |
+| 8 | [🔄 P2P Book Exchange](#8--p2p-book-exchange) |
+| 9 | [👥 Friends & Messaging](#9--friends--messaging) |
+| 10 | [👤 User Profiles](#10--user-profiles) |
+| 11 | [🤖 AI Assistant](#11--ai-assistant) |
+| 12 | [⚙️ Settings & Profile](#12-️-settings--profile) |
+
+---
+
+## 1. 🚀 Getting Started
 
 ### Creating an Account
 
-1. Go to [https://kitep.space](https://kitep.space)
-2. Click **Sign Up** in the navigation bar
-3. Enter your full name, email, and a password (minimum 6 characters)
-4. Click **Create Account**
+1. Go to **[https://kitep.space](https://kitep.space)**
+2. Click **Sign Up** in the top navigation bar
+3. Fill in your full name, email address, and a password *(minimum 6 characters)*
+4. Click **Create Account** — you're in!
 
 ### Signing In
 
-- **Email/Password:** Go to `/login`, enter credentials, click **Sign In**
-- **Google:** Click **Continue with Google** on the login page — no password required
-- Use **Forgot Password?** to receive a password reset link by email
+| Method | How |
+|:---|:---|
+| 📧 **Email/Password** | Go to `/login` → enter credentials → click **Sign In** |
+| 🔵 **Google** | Click **Continue with Google** — no password needed |
+| 🔑 **Forgot Password** | Click **Forgot Password?** → check your email for a reset link |
 
-### Public Browse (No Account Required)
+### 🌍 Browse Without an Account
 
-You can browse the full book catalog without signing in at **https://kitep.space/books**. To borrow books, create a free account.
-
----
-
-## 2. Browsing Books
-
-Navigate to **Browse Books** from the sidebar.
-
-- **Search:** Type in the search bar — results update automatically as you type (400ms debounce)
-- **Genre Filter:** Click genre chips below the search bar to filter by category
-- **Sort:** Use Sort By (Date Added / Title / Author) and direction (Newest / Oldest)
-- **Availability:** Green badge = Available, Red badge = Checked Out
-- **Pagination:** Navigate pages with controls at the bottom
-
-Click any book card to view full details including description, reviews, and available copies.
+You don't need to sign in to explore the catalog! Visit **[https://kitep.space/books](https://kitep.space/books)** to browse all available books. Create a free account when you're ready to borrow.
 
 ---
 
-## 3. Borrowing Books
+## 2. 🔍 Browsing Books
 
-**Requirements:** active subscription and not at your plan borrowing limit.
+Navigate to **Browse Books** in the sidebar after signing in.
 
-1. Find an available book (green badge)
-2. Click **Borrow** on the book detail page
-3. The book appears in **My Loans** with a due date
+### Search & Filter
 
-**Renewing:** My Loans → Renew (allowed up to 2 times, if not overdue)
+| Tool | How it works |
+|:---|:---|
+| 🔎 **Search bar** | Type any keyword — results update **automatically** as you type (400ms debounce) |
+| 🏷️ **Genre chips** | Click a genre button to filter by category; click again to clear |
+| 📊 **Sort options** | Choose Sort By (Date Added / Title / Author) and direction (Newest / Oldest) |
+| 📄 **Pagination** | Navigate pages with controls at the bottom |
 
-**Returning:** My Loans → Return (book becomes available immediately)
+### Book Card Badges
 
----
-
-## 4. Reservations
-
-When a book is Checked Out:
-
-1. Open the book detail page and click **Reserve**
-2. You join the queue — position shown in **My Reservations**
-3. When the book is returned, you receive an **email notification**
-4. The book is held for you for **72 hours** — borrow it before the hold expires
+| Badge | Meaning |
+|:---|:---|
+| 🟢 **Available** | You can borrow this book right now |
+| 🔴 **Checked Out** | Currently on loan — you can reserve it |
 
 ---
 
-## 5. Fines
+## 3. 📖 Borrowing Books
 
-Fines are automatically calculated daily for overdue loans.
+### Requirements
 
-- Go to **My Fines** to see all pending and paid fines
-- Click **Pay Fine** to mark a fine as paid
-- Unpaid fines may restrict borrowing depending on your plan
+> ✅ You need an **active subscription** and must not have reached your plan's borrowing limit.
 
----
+### Step by Step
 
-## 6. Subscriptions
+1. Find a book with a **green Available badge**
+2. Open the book detail page
+3. Click **Borrow**
+4. The book immediately appears in **My Loans** with a due date
 
-Subscriptions define how many books you can borrow at once and for how long per book.
+### Managing Your Loans
 
-| Plan | Duration | Books at Once | Days per Book |
-|---|---|---|---|
-| Free | 30 days | 1 | 7 |
-| Monthly | 30 days | 3 | 14 |
-| Quarterly | 90 days | 5 | 21 |
-| Yearly | 365 days | 10 | 30 |
-
-To subscribe: **Subscriptions** in the sidebar → compare plans → click **Subscribe**.
+| Action | How | Conditions |
+|:---|:---|:---|
+| **Renew** | My Loans → click **Renew** | Allowed up to 2 times; book must not be overdue |
+| **Return** | My Loans → click **Return** | Book becomes available for others immediately |
 
 ---
 
-## 7. Wishlist and Reviews
+## 4. 📅 Reservations
 
-### Wishlist
+When a book is **Checked Out**, you can reserve it to be next in line.
 
-- On any book detail page, click the heart icon or **Add to Wishlist**
+### How to Reserve
+
+1. Open a book with the red **Checked Out** badge
+2. Click **Reserve** on the book detail page
+3. You join the queue — see your **position** in My Reservations
+
+### What Happens Next
+
+```
+Book returned by current borrower
+        ↓
+You receive an 📧 EMAIL NOTIFICATION
+        ↓
+Book is held for you for 72 hours
+        ↓
+Borrow it before the hold expires — or it goes to the next person
+```
+
+> ℹ️ You can cancel a reservation at any time from **My Reservations**.
+
+---
+
+## 5. 💰 Fines
+
+Fines are calculated **automatically** by the system every day for overdue loans.
+
+### Understanding Fines
+
+| Status | Description |
+|:---|:---|
+| 🟡 **Pending** | Fine has been issued — payment required |
+| 🟠 **Partially Paid** | Some amount has been paid |
+| 🟢 **Paid** | Fine fully settled |
+| ⚪ **Waived** | Admin has waived this fine |
+
+### How to Pay
+
+1. Go to **My Fines** in the sidebar
+2. Find the pending fine
+3. Click **Pay Fine**
+
+> ⚠️ Unpaid fines may restrict your ability to borrow additional books depending on your plan.
+
+---
+
+## 6. 🏷️ Subscriptions
+
+Your subscription plan controls **how many books** you can have out at once and **how long** each loan lasts.
+
+### Available Plans
+
+| Plan | Duration | 📚 Books at Once | 📅 Days per Book |
+|:---|:---:|:---:|:---:|
+| 🆓 **Free** | 30 days | 1 | 7 |
+| 📅 **Monthly** | 30 days | 3 | 14 |
+| 📆 **Quarterly** | 90 days | 5 | 21 |
+| 🗓️ **Yearly** | 365 days | 10 | 30 |
+
+*Exact plan details are configured by your library administrator and may vary.*
+
+### Subscribing
+
+1. Click **Subscriptions** in the sidebar
+2. Compare the available plans side by side
+3. Click **Subscribe** on your chosen plan
+4. Your subscription activates **immediately**
+
+> 💡 Your active plan and expiry date are always shown on the Dashboard.
+
+---
+
+## 7. ⭐ Wishlist & Reviews
+
+### ❤️ Wishlist
+
+Save books you want to read later without borrowing them.
+
+- On any book detail page → click the **heart icon** or **Add to Wishlist**
 - View all saved books at **Wishlist** in the sidebar
-- Remove books from the wishlist at any time
+- Remove any book from the wishlist with the **remove** button
 
-### Writing a Review
+### ✍️ Writing a Review
 
-- Open a book you have previously borrowed
-- Click **Write a Review**
-- Select 1–5 stars and write your review text (minimum 10 characters)
-- A **Verified Reader** badge appears if you have completed a loan for that book
+Share your thoughts with other readers!
+
+1. Open a book you have **previously borrowed and returned**
+2. Click **Write a Review**
+3. Select a **star rating** (1–5)
+4. Write your review text *(minimum 10 characters)*
+5. Click **Submit**
+
+> 🏅 A **Verified Reader** badge appears on your review if you completed a loan for that specific book — this shows other readers that your review is from someone who actually read it.
 
 ---
 
-## 8. P2P Book Exchange
+## 8. 🔄 P2P Book Exchange
 
-The Book Exchange lets you share your personal books with community members and borrow theirs.
+The Book Exchange lets you **share your personal books** with other community members and borrow theirs — completely free, protected by a virtual deposit system.
 
-### Listing Your Book
+### 💡 How It Works
 
-1. Go to **Book Exchange** → **My Books** tab → **List a Book**
-2. Fill in: title, author, condition (New / Good / Fair / Poor), loan duration, cover image (upload file or paste URL), optional description
-3. Click **List Book** — it appears in the Marketplace immediately
+```
+Owner lists a book
+        ↓
+Requester sends a borrow request
+        ↓
+Owner accepts → 500 coins LOCKED from requester's balance
+        ↓
+Book is borrowed (tracked with due date)
+        ↓
+Requester returns book → 500 coins RELEASED back
+        ↓
+Both parties can rate each other ⭐
+```
 
-### Requesting a Book
+### 🪙 The Coin Deposit System
 
-1. Browse the **Marketplace** tab → find a book → click **Request Book**
-2. Optionally write a message to the owner explaining why you want to borrow it
-3. When the owner accepts, **500 coins are locked** from your balance as a deposit
-
-### The Deposit System
+Every new account starts with **1,000 coins**. The deposit system protects lenders from non-return risk.
 
 | Event | Coins |
-|---|---|
-| New account created | +1,000 coins starting balance |
-| Owner accepts your request | −500 coins locked |
-| You return the book on time | +500 coins released back |
-| Book becomes overdue | −500 coins forfeited |
+|:---|:---:|
+| 🎉 New account created | **+1,000** |
+| ✅ Owner accepts your request | **−500** (locked) |
+| 📦 You return the book on time | **+500** (released) |
+| ⏰ Book goes overdue | **−500** (forfeited) |
 
-Your balance and the required deposit are shown in the widget at the top of the Exchange page. If your balance is below 500 coins, the Request button is disabled. Admins can grant additional coins.
+Your **current balance** and the **required deposit** are shown in the widget at the top of the Exchange page. If your balance drops below 500 coins, the Request button is disabled until you have enough.
 
-### Accepting or Rejecting Requests (as Owner)
+### 📖 Listing Your Book
 
-1. Go to the **Incoming Requests** tab
-2. Review the requester's name and reputation score
-3. Click **Accept** (deposit is locked automatically) or **Reject**
-4. Accepting one request auto-rejects all other pending requests for the same book
+1. Go to **Book Exchange** → **My Books** tab
+2. Click **List a Book**
+3. Fill in the details:
+   - Title, author
+   - **Condition:** New / Good / Fair / Poor
+   - Loan duration (how many days you'll lend it)
+   - Cover image (upload a photo or paste a URL)
+   - Optional description
+4. Click **List Book** — it appears in the Marketplace immediately
 
-### Returning a Borrowed Book
+### 📬 Requesting a Book
 
-1. Go to the **Borrowed Books** tab → click **Return**
-2. Your deposit is released instantly and the book relists in the Marketplace
-3. Both parties can then rate each other (1–5 stars)
+1. Browse the **Marketplace** tab (search and filter available)
+2. Click **Request Book** on any listing
+3. Optionally write a message to the owner
+4. Wait for the owner to accept or reject
 
-### Reputation Score
+### ✅ Accepting / ❌ Rejecting Requests *(as Owner)*
 
-- Score range: 1.0 – 5.0 (all users start at 5.0)
-- Ratings from exchanges update the score using a weighted rolling average
-- Overdue borrows apply **penalty points** — reaching 10 penalty points results in a block from the exchange system
+1. Go to **Incoming Requests** tab
+2. See each requester's name and **reputation score** ⭐
+3. Click **Accept** — deposit is locked automatically
+4. Or click **Reject** — book stays listed for others
+
+> 📌 Accepting one request **automatically rejects** all other pending requests for the same book.
+
+### 📦 Returning a Borrowed Book
+
+1. Go to **Borrowed Books** tab
+2. Find the active borrow → click **Return**
+3. Your **500 coins are released** instantly
+4. The book **relists automatically** in the Marketplace
+5. You can now rate the lender ⭐
+
+### 🏆 Reputation System
+
+| Action | Effect |
+|:---|:---|
+| Exchange partner rates you ⭐ | Weighted average updates your score |
+| Book goes overdue | +2 penalty points, score decreases |
+| 10+ penalty points | ⛔ Blocked from exchange system |
+
+Reputation scores range from **1.0 to 5.0** and are visible on your public profile.
 
 ---
 
-## 9. Friends and Messaging
+## 9. 👥 Friends & Messaging
 
-### Adding Friends
+### ➕ Adding Friends
 
 1. Go to **Friends** → **Find People** tab
-2. Search by name or email (type at least 2 characters)
-3. Click **Add Friend** — the other user receives a request in their Requests tab
-4. They can accept or decline from **Friends** → **Requests**
+2. Search by name or email *(type at least 2 characters)*
+3. Click **Add Friend**
+4. The other person sees your request in their **Requests** tab and can accept or decline
 
-### Messaging
+### 💬 Messaging
 
-1. Go to **Friends** → **Messages** tab
-2. Select a conversation from the left panel, or click **Chat** on any friend card
-3. Type your message and press **Enter** or the send button
-4. On mobile: tap the back arrow to return to the conversation list
-5. Unread message badges clear automatically when you open a conversation
+| Platform | How |
+|:---|:---|
+| 🖥️ **Desktop** | Friends → Messages → select conversation from left panel |
+| 📱 **Mobile** | Friends → Messages → tap a conversation → tap ← to go back |
 
----
+- Press **Enter** or the **send button** to send a message
+- Unread message **badges** appear on the Messages tab — they clear when you open the conversation
+- You can also **start a chat from anywhere** — click any user's avatar to open their profile and hit Message
 
-## 10. User Profiles
+### 📋 Managing Requests
 
-Click on any user's **avatar or name** anywhere in the app — in the Exchange marketplace, request cards, borrow records, or the Friends page — to view their public profile:
-
-- Profile photo, full name, and verified badge
-- Reputation score, total books shared, and total books borrowed
-- Phone number and last seen date (if provided)
-- **Message** button — opens a direct chat with that user
-- **Add Friend** button — sends a friend request
-
----
-
-## 11. AI Assistant
-
-The AI chat bubble (bottom-right corner) is powered by Groq and the LLaMA 3.3 70B language model. It fetches your live account data before every response, so answers are always up to date.
-
-**What it knows:**
-- Your active loans and due dates
-- Your pending fines and total amount owed
-- Your current subscription plan and expiry
-- Books available in the catalog (searched by keywords in your question)
-
-**Example questions:**
-- *"What books do I currently have borrowed?"*
-- *"Do I have any overdue books?"*
-- *"Show me available books about Python programming"*
-- *"When does my subscription expire?"*
-- *"How much do I owe in fines?"*
+| Tab | What you see |
+|:---|:---|
+| **Friends** | All accepted friends + Chat and Remove buttons |
+| **Requests** | Incoming requests (Accept/Decline) + your Sent requests (Cancel) |
+| **Find People** | Search for new connections |
+| **Messages** | All conversations with unread counts |
 
 ---
 
-## 12. Settings and Profile
+## 10. 👤 User Profiles
 
-### Updating Your Profile
+Click on **any user's avatar or name** anywhere in the app to view their public profile:
 
-1. Go to **Profile** from the sidebar or the account menu (top-right avatar)
-2. Edit your full name, phone number, or profile picture (upload a file or paste an image URL)
+- In the **Exchange Marketplace** → click the owner's row
+- In **Incoming Requests** → click the requester's row
+- In **Borrowed Books** → click the lender/borrower row
+- In **Friends** → click any friend's name or avatar
+- In **Messages** → click the chat header
+
+### What You Can See
+
+| Info | Description |
+|:---|:---|
+| 🖼️ **Photo & Name** | Profile picture and full name |
+| ✅ **Verified Badge** | Shows if the account is verified |
+| ⭐ **Reputation Score** | Exchange rating (1.0–5.0) |
+| 🔄 **Books Shared** | Total successful exchanges as lender |
+| 📖 **Books Borrowed** | Total successful exchanges as borrower |
+| 📞 **Phone** | If the user has set a phone number |
+| 🕐 **Last Seen** | Date of last login |
+
+### Actions
+
+| Button | What it does |
+|:---|:---|
+| 💬 **Message** | Opens a direct chat with that user |
+| ➕ **Add Friend** | Sends a friend request |
+
+---
+
+## 11. 🤖 AI Assistant
+
+The AI chat bubble (bottom-right corner) is powered by **Groq** and the **LLaMA 3.3 70B** language model. It fetches your **live account data** before every response — so answers are always current.
+
+### What It Knows About You
+
+| Data | Example answer |
+|:---|:---|
+| 📚 Active loans & due dates | *"You have 'Atomic Habits' due in 3 days"* |
+| 💰 Pending fines | *"You have an outstanding fine of 50 for loan #12"* |
+| 🏷️ Subscription status | *"Your Monthly plan expires on June 15, 2026"* |
+| 🔍 Books in the catalog | *"Here are 3 available books about Python…"* |
+
+### Example Questions to Try
+
+```
+"What books do I currently have borrowed?"
+"Do I have any overdue books?"
+"Show me available books about machine learning"
+"When does my subscription expire?"
+"How much do I owe in fines?"
+"Are there any programming books available?"
+"What's my borrowing limit?"
+```
+
+> 💡 **Tip:** The AI only knows what's in your account and the catalog — it won't make up books or loan records.
+
+---
+
+## 12. ⚙️ Settings & Profile
+
+### 🖼️ Updating Your Profile
+
+1. Click your **avatar** (top-right) → **Profile**
+2. Edit:
+   - **Full name**
+   - **Phone number**
+   - **Profile picture** — upload a photo file or paste an image URL
 3. Click **Save Changes**
 
-> If you sign in with Google, your name and photo are taken from Google on the **first login only**. After that, you can change them freely and Google logins will not overwrite them.
+> 🔵 **Google users:** Your name and photo are set from Google on the **first login only**. After that, you can change them freely — Google logins will not overwrite your changes.
 
-### Changing Your Password
+### 🔑 Changing Your Password
 
-1. Go to **Settings**
-2. Enter your current password and your new password
-3. Click **Update Password**
+1. Go to **Settings** from the sidebar or account menu
+2. Enter your **current password**
+3. Enter and confirm your **new password**
+4. Click **Update Password**
 
-### Notification Preferences
+> ⚠️ If you signed up with Google and have never set a password, use **Forgot Password** on the login page to set one.
 
-1. Go to **Settings** → Notifications tab
-2. Toggle on or off:
-   - Email notifications
-   - Due date reminders
-   - Reservation availability alerts
-   - New arrival announcements
-   - Subscription expiry warnings
+### 🔔 Notification Preferences
+
+Go to **Settings → Notifications** to toggle:
+
+| Notification | Default |
+|:---|:---:|
+| 📧 Email notifications | ✅ On |
+| 📅 Due date reminders | ✅ On |
+| 📌 Reservation availability | ✅ On |
+| 🆕 New arrivals | ✅ On |
+| 🏷️ Subscription expiry warnings | ✅ On |
+| 📢 Marketing emails | ❌ Off |
 
 ---
+
+<div align="center">
 
 ## Need Help?
 
-- **Contact form:** [https://kitep.space/contact](https://kitep.space/contact)
-- **About the platform:** [https://kitep.space/about](https://kitep.space/about)
+[![Contact](https://img.shields.io/badge/📬%20Contact%20Us-kitep.space/contact-4F46E5?style=for-the-badge)](https://kitep.space/contact)
+[![About](https://img.shields.io/badge/ℹ️%20About%20Kitep%20Space-kitep.space/about-7C3AED?style=for-the-badge)](https://kitep.space/about)
+
+</div>

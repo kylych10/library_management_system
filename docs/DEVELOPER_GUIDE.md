@@ -1,560 +1,540 @@
-# Kitep Space — Developer Guide
+<div align="center">
 
-**Live:** [https://kitep.space](https://kitep.space)  
-**Backend:** [https://librarymanagementsystem-production-fc6e.up.railway.app](https://librarymanagementsystem-production-fc6e.up.railway.app)
+# 🔧 Kitep Space — Developer Guide
 
----
+[![Live](https://img.shields.io/badge/🌐%20Live-kitep.space-4F46E5?style=for-the-badge)](https://kitep.space)
+[![Backend](https://img.shields.io/badge/⚙️%20API-Railway-0B0D0E?style=for-the-badge&logo=railway)](https://librarymanagementsystem-production-fc6e.up.railway.app)
 
-## Table of Contents
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-20%20LTS-339933?style=flat-square&logo=nodedotjs&logoColor=white)
 
-1. [Project Structure](#1-project-structure)
-2. [Local Development Setup](#2-local-development-setup)
-3. [Environment Variables](#3-environment-variables)
-4. [Architecture Overview](#4-architecture-overview)
-5. [Backend Architecture](#5-backend-architecture)
-6. [Frontend Architecture](#6-frontend-architecture)
-7. [Authentication Flow](#7-authentication-flow)
-8. [Key Business Logic](#8-key-business-logic)
-9. [P2P Exchange Module](#9-p2p-exchange-module)
-10. [AI Assistant Integration](#10-ai-assistant-integration)
-11. [API Reference](#11-api-reference)
-12. [Deployment](#12-deployment)
+</div>
 
 ---
 
-## 1. Project Structure
+## 📋 Table of Contents
+
+- [📁 Project Structure](#-project-structure)
+- [🚀 Local Setup](#-local-setup)
+- [🔑 Environment Variables](#-environment-variables)
+- [🏗 Architecture Overview](#-architecture-overview)
+- [⚙️ Backend Architecture](#-backend-architecture)
+- [🎨 Frontend Architecture](#-frontend-architecture)
+- [🔐 Authentication Flows](#-authentication-flows)
+- [💡 Key Business Logic](#-key-business-logic)
+- [🔄 P2P Exchange Module](#-p2p-exchange-module)
+- [🤖 AI Assistant Integration](#-ai-assistant-integration)
+- [📡 API Reference](#-api-reference)
+- [☁️ Deployment Guide](#-deployment-guide)
+
+---
+
+## 📁 Project Structure
 
 ```
 Library-Management-System/
 ├── source/
-│   ├── Backend-springboot/          # Spring Boot REST API
+│   ├── Backend-springboot/
 │   │   └── src/main/java/com/kylych/
-│   │       ├── configurations/      # Security, CORS, JWT filter
-│   │       ├── controller/          # REST controllers
-│   │       ├── service/             # Business logic (interface + impl)
-│   │       ├── repository/          # Spring Data JPA repositories
-│   │       ├── modal/               # JPA entities
-│   │       ├── payload/             # DTOs, requests, responses
-│   │       ├── domain/              # Enums
-│   │       ├── exchange/            # P2P exchange sub-module
-│   │       │   ├── controller/
-│   │       │   ├── service/
-│   │       │   ├── model/
-│   │       │   ├── repository/
-│   │       │   ├── dto/
-│   │       │   └── domain/
-│   │       ├── oauth2/              # Google OAuth2 handlers
-│   │       ├── scheduler/           # Scheduled tasks
-│   │       └── exception/           # Custom exceptions + global handler
+│   │       ├── configurations/        # SecurityConfig, CorsFixFilter, JwtValidator
+│   │       ├── controller/            # REST controllers
+│   │       ├── service/impl/          # Business logic
+│   │       ├── repository/            # Spring Data JPA
+│   │       ├── modal/                 # JPA entities
+│   │       ├── payload/               # DTOs, requests, responses
+│   │       ├── domain/                # Enums
+│   │       ├── exchange/              # ← P2P Exchange sub-module
+│   │       │   ├── controller/        #   5 controllers
+│   │       │   ├── service/           #   6 services + scheduler
+│   │       │   ├── model/             #   6 entities
+│   │       │   ├── repository/        #   5 repositories
+│   │       │   ├── dto/               #   DTOs + request classes
+│   │       │   └── domain/            #   7 status enums
+│   │       ├── oauth2/                # Google OAuth2 handlers
+│   │       ├── scheduler/             # Loan + subscription schedulers
+│   │       └── exception/             # GlobalExceptionHandler
 │   │
-│   └── Frontend-Vite/               # React 18 SPA
+│   └── Frontend-Vite/
 │       └── src/
-│           ├── Admin/               # Admin dashboard pages + layout
-│           ├── components/          # Shared UI components
-│           │   ├── books/
-│           │   ├── chat/            # AI Assistant widget
-│           │   ├── layout/          # UserLayout, Sidebar, Navbar
-│           │   ├── notification/
-│           │   ├── reviews/
-│           │   ├── subscriptions/
-│           │   └── user/            # UserProfileModal
-│           ├── config/              # MUI theme (muiTheme.js)
-│           ├── contexts/            # ThemeContext
-│           ├── pages/               # Page components by feature
-│           │   ├── Books/
-│           │   ├── Dashboard/
-│           │   ├── Exchange/        # P2P Exchange page
-│           │   ├── Friends/
-│           │   ├── MyFines/
-│           │   ├── MyLoan/
-│           │   ├── Reservations/
-│           │   ├── Wishlist/
-│           │   ├── subscription/
-│           │   ├── AboutPage.jsx    # Public about page
-│           │   ├── ContactPage.jsx  # Public contact page
-│           │   └── PublicBooksPage.jsx # Unauthenticated book browse
-│           ├── store/               # Redux Toolkit store + slices
-│           │   └── features/
-│           │       ├── auth/
-│           │       ├── books/
-│           │       ├── bookLoans/
-│           │       ├── exchange/    # P2P exchange state
-│           │       ├── fines/
-│           │       ├── friends/
-│           │       ├── messages/
-│           │       ├── notification/
-│           │       ├── reservations/
-│           │       ├── subscriptions/
-│           │       └── wishlist/
+│           ├── Admin/                 # Admin dashboard + layout
+│           ├── components/
+│           │   ├── books/             # BookCard, CheckoutDialog, GenreFilter
+│           │   ├── chat/              # ChatAssistant.jsx (AI widget)
+│           │   ├── layout/            # UserLayout, SidebarDrawer, Navbar
+│           │   ├── notification/      # NotificationBell
+│           │   └── user/              # UserProfileModal
+│           ├── config/
+│           │   └── muiTheme.js        # ← Centralized MUI design system
+│           ├── pages/
+│           │   ├── Exchange/          # ← P2P Exchange (5 tabs)
+│           │   ├── Friends/           # Friends + messaging
+│           │   ├── Dashboard/         # Stats + active loans
+│           │   ├── Books/             # Authenticated catalog
+│           │   ├── AboutPage.jsx      # Public
+│           │   ├── ContactPage.jsx    # Public + contact form
+│           │   └── PublicBooksPage.jsx # Unauthenticated browse
+│           ├── store/features/        # Redux slices + thunks (11 features)
 │           └── utils/
-│               ├── api.js           # Axios instance + JWT interceptors
-│               └── groq.js          # Groq AI integration
+│               ├── api.js             # Axios + JWT interceptors
+│               └── groq.js            # Groq AI + system prompt builder
+│
 └── docs/
-    ├── README.md
-    ├── USER_GUIDE.md
-    ├── DEVELOPER_GUIDE.md
-    └── DATABASE.md
+    ├── README.md          ← Project overview + badges
+    ├── USER_GUIDE.md      ← End-user feature guide
+    ├── DEVELOPER_GUIDE.md ← You are here
+    └── DATABASE.md        ← Full schema (22 tables) + DBML
 ```
 
 ---
 
-## 2. Local Development Setup
+## 🚀 Local Setup
 
 ### Prerequisites
 
-- Java 21 (Amazon Corretto recommended)
-- Node.js 20 LTS + npm
-- Git
+| Tool | Version |
+|:---|:---:|
+| Java JDK | 21 LTS |
+| Node.js | 20 LTS |
+| Git | latest |
 
-> The application connects to the Railway MySQL database by default — no local MySQL installation needed.
+> ✅ **No local MySQL needed** — the app connects to Railway MySQL by default.
 
 ### Backend
 
 ```bash
 cd source/Backend-springboot
-
-# Run with Maven wrapper
 ./mvnw spring-boot:run
-
-# API available at http://localhost:8080
-# Swagger/Actuator: http://localhost:8080/actuator
+# API ready at http://localhost:8080
 ```
-
-The `application.properties` defaults connect to Railway MySQL via TCP proxy. Change `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD` as environment variables if using a local database.
 
 ### Frontend
 
 ```bash
 cd source/Frontend-Vite
-
 npm install
-
-# .env is already configured for local development
-# VITE_API_BASE_URL=http://localhost:8080
-
 npm run dev
-# App at http://localhost:5173
+# App ready at http://localhost:5173
 ```
-
-When deploying to production, set `VITE_API_BASE_URL` to the Railway backend URL in Netlify dashboard.
 
 ---
 
-## 3. Environment Variables
+## 🔑 Environment Variables
 
-### Backend (`application.properties` / Railway)
+### Backend
 
 | Variable | Default | Description |
-|---|---|---|
-| `PORT` | `8080` | Server port |
-| `DB_HOST` | `monorail.proxy.rlwy.net` | MySQL host |
-| `DB_PORT` | `47188` | MySQL port |
+|:---|:---|:---|
+| `DB_HOST` | `monorail.proxy.rlwy.net` | MySQL TCP proxy host |
+| `DB_PORT` | `47188` | MySQL TCP proxy port |
 | `DB_NAME` | `railway` | Database name |
-| `DB_USERNAME` | `root` | MySQL user |
+| `DB_USERNAME` | `root` | MySQL username |
 | `DB_PASSWORD` | *(required)* | MySQL password |
 | `MAIL_USERNAME` | *(empty)* | Gmail sender address |
 | `MAIL_PASSWORD` | *(empty)* | Gmail app password |
 | `GOOGLE_CLIENT_ID` | `dummy` | Google OAuth2 client ID |
-| `GOOGLE_CLIENT_SECRET` | `dummy` | Google OAuth2 client secret |
-| `FRONTEND_URL` | `http://localhost:5173` | Used for OAuth2 redirect and password reset emails |
-| `BASE_URL` | `http://localhost:8080` | Used for OAuth2 redirect URI |
+| `GOOGLE_CLIENT_SECRET` | `dummy` | Google OAuth2 secret |
+| `FRONTEND_URL` | `http://localhost:5173` | OAuth2 redirect + reset email links |
+| `BASE_URL` | `http://localhost:8080` | OAuth2 redirect URI base |
 
 ### Frontend (`.env`)
 
 | Variable | Description |
-|---|---|
-| `VITE_API_BASE_URL` | Backend base URL |
-| `VITE_GROQ_API_KEY` | Groq API key for AI assistant |
+|:---|:---|
+| `VITE_API_BASE_URL` | Backend URL |
+| `VITE_GROQ_API_KEY` | Groq API key |
 
 ---
 
-## 4. Architecture Overview
+## 🏗 Architecture Overview
 
 ```
-[Browser] ──HTTPS──► [Netlify CDN] ──► React SPA (https://kitep.space)
-    │
-    │ REST API + JWT
-    ▼
-[Railway] ──► Spring Boot (port 8080)
-    │
-    │ JPA/JDBC
-    ▼
-[Railway] ──► MySQL 8
-
-[Browser] ──HTTPS──► [Groq Cloud] ──► LLaMA 3.3 70B (AI assistant)
+┌──────────────────────────────────────────────────────────┐
+│                      BROWSER                              │
+│  React SPA (Redux + MUI + Tailwind)                       │
+│   │  REST + JWT                   │ Groq API (direct)     │
+└───┼───────────────────────────────┼───────────────────────┘
+    │                               │
+    ▼                               ▼
+┌─────────────────────┐    ┌────────────────────┐
+│  Railway            │    │  Groq Cloud         │
+│  Spring Boot 3.5    │    │  LLaMA 3.3 70B      │
+│  ┌───────────────┐  │    └────────────────────┘
+│  │  MySQL 8      │  │
+│  │  22 tables    │  │
+│  └───────────────┘  │
+└─────────────────────┘
 ```
 
-- **Frontend:** Single-Page Application, client-side routing, JWT stored in `localStorage`
-- **Backend:** Stateless REST API, JWT validated on every protected request
-- **Database:** `ddl-auto=update` — Hibernate manages schema automatically
-- **CORS:** Two-layer — `CorsFixFilter` (highest precedence) + Spring Security CORS config
+**Key decisions:**
+- 🔒 **Stateless REST** — JWT on every request, no server sessions
+- 🚀 **SPA** — all 404s → `index.html` via Netlify `_redirects`
+- 🤖 **AI in browser** — Groq calls go browser→Groq (no backend latency)
+- 🛡️ **Two-layer CORS** — `@Order(HIGHEST_PRECEDENCE)` filter + Spring Security CORS
+- ⏰ **Schedulers** — `02:00` fine calc, `02:30` exchange overdue check
 
 ---
 
-## 5. Backend Architecture
-
-### Layers
-
-| Layer | Package | Responsibility |
-|---|---|---|
-| Controller | `controller/` | HTTP routing, request/response mapping |
-| Service | `service/impl/` | Business logic, transactions |
-| Repository | `repository/` | JPA data access |
-| Model | `modal/` | JPA entities (DB tables) |
-| DTO | `payload/dto/` | Data transfer objects |
-| Domain | `domain/` | Enums |
-| Exception | `exception/` | Custom exceptions + `@RestControllerAdvice` |
+## ⚙️ Backend Architecture
 
 ### Security Filter Chain
 
 ```
-Request → CorsFixFilter (HIGHEST_PRECEDENCE)
-       → JwtValidator (before BasicAuthenticationFilter)
-       → Spring Security authorization rules
-       → Controller
+Request
+  │
+  ▼
+CorsFixFilter (@Order HIGHEST_PRECEDENCE)
+  → Adds Access-Control-* to ALL responses (including 500 errors)
+  → Handles OPTIONS preflight → 200 OK immediately
+  │
+  ▼
+JwtValidator (OncePerRequestFilter)
+  → Extracts Bearer token from Authorization header
+  → Validates HMAC-SHA256 + expiry
+  → Sets SecurityContextHolder
+  │
+  ▼
+Spring Security Authorization
+  → GET /api/books/**, GET /api/genres/** → permitAll
+  → /auth/**                              → permitAll
+  → /api/super-admin/**                   → hasRole("ADMIN")
+  → /api/**                               → authenticated
+  │
+  ▼
+Controller
 ```
 
-**Public endpoints (no JWT required):**
-- `GET /api/books/**`
-- `GET /api/genres/**`
-- `/auth/**`
-- `/about`, `/contact` (static pages)
+### Scheduled Tasks
 
-**Admin-only endpoints:**
-- `/api/super-admin/**`
-
-### Key Security Classes
-
-| Class | Description |
-|---|---|
-| `JwtProvider` | Generates and validates HMAC-SHA256 signed JWT tokens (24h expiry) |
-| `JwtValidator` | `OncePerRequestFilter` — extracts JWT, sets `SecurityContextHolder` |
-| `CorsFixFilter` | `@Order(HIGHEST_PRECEDENCE)` — adds CORS headers before Spring Security |
-| `CustomOAuth2UserService` | Handles Google OAuth2 user creation/update |
-| `OAuth2LoginSuccessHandler` | Generates JWT after OAuth2 login, redirects to frontend callback |
+| Scheduler | Cron | Action |
+|:---|:---|:---|
+| `BookLoanScheduler` | `0 0 2 * * ?` | Marks overdue loans, creates Fine records |
+| `SubscriptionScheduler` | `0 0 2 * * ?` | Sets expired subscriptions `isActive=false` |
+| `ExchangeOverdueScheduler` | `0 30 2 * * ?` | Marks exchange borrows overdue, forfeits deposits, applies penalty points |
 
 ---
 
-## 6. Frontend Architecture
+## 🎨 Frontend Architecture
 
-### State Management
+### MUI Design System (`config/muiTheme.js`)
 
-Each feature has a dedicated Redux slice + thunk file:
-
-```
-store/features/
-├── auth/          authSlice.js + authThunk.js
-├── books/         bookSlice.js + bookThunk.js
-├── bookLoans/     bookLoanSlice.js + bookLoanThunk.js
-├── exchange/      exchangeSlice.js + exchangeThunk.js
-├── fines/         fineSlice.js + fineThunk.js
-├── friends/       friendSlice.js + friendThunk.js
-├── messages/      messageSlice.js + messageThunk.js
-├── notification/  notificationSlice.js + notificationThunk.js
-├── reservations/  reservationSlice.js + reservationThunk.js
-├── subscriptions/ subscriptionSlice.js + subscriptionThunk.js
-└── wishlist/      wishlistSlice.js + wishlistThunk.js
-```
+| Token | Value |
+|:---|:---|
+| Primary | `#4F46E5` (indigo) |
+| Secondary | `#7C3AED` (purple) |
+| Button gradient | `linear-gradient(135deg, #4F46E5, #7C3AED)` |
+| Card radius | `20px` |
+| Dialog radius | `24px` |
+| Font | Inter (Google Fonts) |
+| Breakpoints | `xs:0 sm:480 md:768 lg:1024 xl:1280` |
 
 ### HTTP Client (`utils/api.js`)
 
-- Axios instance with `baseURL` from `VITE_API_BASE_URL`
-- **Request interceptor:** attaches `Authorization: Bearer <token>` from `localStorage`
-- **Response interceptor:** clears token on 401, lets Redux redirect
+```javascript
+const api = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL });
 
-### Design System (`config/muiTheme.js`)
+// Auto-attach JWT
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('jwt');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-Centralized MUI theme defining:
-- **Primary:** `#4F46E5` (indigo) → `#7C3AED` (purple) gradient on buttons
-- **Typography:** `clamp()` fluid sizes, Inter font
-- **Components:** Cards (20px radius), Dialogs (24px radius), consistent focus rings
-- **Breakpoints:** `xs:0, sm:480, md:768, lg:1024, xl:1280`
-
-### Routing
-
-```jsx
-// Public (always accessible)
-/about          → AboutPage
-/contact        → ContactPage
-/books          → PublicBooksPage (unauthenticated)
-
-// Unauthenticated only
-/               → LandingPage
-/login          → Login
-/register       → Register
-
-// Authenticated users
-/               → Dashboard
-/books          → BooksPage (authenticated version)
-/exchange       → ExchangePage
-/friends        → FriendsPage
-/my-loans       → MyLoansPage
-/my-fines       → MyFinesPage
-/subscriptions  → SubscriptionsPage
-/wishlist       → WishlistPage
-/my-reservations → ReservationsPage
-/profile        → ProfilePage
-
-// Admin only
-/admin/**       → AdminLayout + admin pages
+// Clear token on 401
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) localStorage.removeItem('jwt');
+    return Promise.reject(err);
+  }
+);
 ```
 
 ---
 
-## 7. Authentication Flow
+## 🔐 Authentication Flows
 
 ### Email/Password
 
 ```
-POST /auth/login {email, password}
-→ Server validates BCrypt hash
-→ Returns { token: "eyJ..." }
-→ Frontend stores in localStorage
-→ Axios interceptor attaches to all subsequent requests
+POST /auth/login { email, password }
+  → Validate BCrypt hash
+  → Return { token: "eyJ..." }
+  → Frontend: localStorage.setItem('jwt', token)
+  → Axios interceptor attaches to all future requests
 ```
 
 ### Google OAuth2
 
 ```
-User clicks "Continue with Google"
-→ Browser navigates to /oauth2/authorization/google
-→ Spring Security redirects to Google
-→ User authenticates with Google
-→ Google redirects to /login/oauth2/code/google
-→ CustomOAuth2UserService creates/updates user
-→ OAuth2LoginSuccessHandler generates JWT
-→ Redirects to {FRONTEND_URL}/oauth2/callback?token=eyJ...
-→ Frontend stores token, navigates to dashboard
+Click "Continue with Google"
+  → /oauth2/authorization/google
+  → Spring Security → Google login page
+  → User authenticates
+  → Google → /login/oauth2/code/google?code=...
+  → CustomOAuth2UserService:
+      If new user    → CREATE account (provider=GOOGLE)
+      If first login → update name/photo from Google
+      If returning   → leave name/photo unchanged
+  → OAuth2LoginSuccessHandler → issue JWT
+  → Redirect to {FRONTEND_URL}/oauth2/callback?token=eyJ...
+  → Frontend stores token, navigates to dashboard
 ```
 
 ---
 
-## 8. Key Business Logic
+## 💡 Key Business Logic
 
-### Book Borrowing Eligibility
+### Borrowing Eligibility
 
 ```java
-// In BookLoanService.checkoutBook()
-1. Find active subscription → throw if none
-2. Count active loans → throw if >= maxBooksAllowed
-3. Check availableCopies > 0 → throw if not
-4. Decrement availableCopies (within @Transactional)
-5. Create BookLoan with status=CHECKED_OUT, dueDate=now+maxDaysPerBook
-```
+@Transactional
+public BookLoanDTO checkoutBook(Long bookId, User user) {
+    // 1. Active subscription
+    Subscription sub = subscriptionRepo.findActiveByUser(user)
+        .orElseThrow(() -> new SubscriptionException("No subscription"));
 
-### Fine Calculation Scheduler
+    // 2. Borrowing limit
+    if (loanRepo.countActive(user) >= sub.getMaxBooksAllowed())
+        throw new BookLoanException("Limit reached");
 
-```
-@Scheduled(cron = "0 0 2 * * ?") — daily at 02:00
-For each loan where status=CHECKED_OUT AND dueDate < today:
-  - Set status = OVERDUE, isOverdue = true
-  - Create/update Fine record with amount = overdueDays × rate
+    // 3. Availability (atomic decrement)
+    Book book = bookRepo.findById(bookId).orElseThrow(...);
+    if (book.getAvailableCopies() <= 0)
+        throw new BookLoanException("Not available");
+
+    book.setAvailableCopies(book.getAvailableCopies() - 1);
+    bookRepo.save(book);
+
+    return mapper.toDTO(loanRepo.save(BookLoan.builder()
+        .user(user).book(book).status(CHECKED_OUT)
+        .dueDate(LocalDate.now().plusDays(sub.getMaxDaysPerBook()))
+        .build()));
+}
 ```
 
 ### Reservation Queue
 
 ```
-On book return:
-  1. Find earliest PENDING reservation for this book
-  2. Set status = AVAILABLE
-  3. Set availableUntil = now + 72h
-  4. Send email notification to reservation holder
-  5. Do NOT increment availableCopies (held for reservation holder)
-On reservation expiry (scheduled task):
-  6. Set status = EXPIRED
-  7. Increment availableCopies
+Book returned
+  │
+  ├─ Increment availableCopies
+  │
+  └─ Check for earliest PENDING reservation
+        │
+        ├─ None → book freely available
+        │
+        └─ Found → status=AVAILABLE, availableUntil=now+72h
+                   Send email notification
+                   Do NOT increment copies (held for holder)
 ```
 
 ---
 
-## 9. P2P Exchange Module
+## 🔄 P2P Exchange Module
 
-The exchange feature lives in `com.kylych.exchange` — a self-contained sub-module.
-
-### Package Structure
+### Complete Flow
 
 ```
-exchange/
-├── domain/    ExchangeBookStatus, ExchangeRequestStatus,
-│              ExchangeBorrowStatus, ExchangeDepositStatus,
-│              BookCondition, ExchangeReportReason, ExchangeReportStatus
-├── model/     ExchangeBook, ExchangeRequest, ExchangeBorrowRecord,
-│              ExchangeDeposit, UserReputation, ExchangeReport
-├── repository/ (Spring Data JPA repositories for each model)
-├── dto/       ExchangeBookDTO, ExchangeRequestDTO,
-│              ExchangeBorrowRecordDTO, UserReputationDTO,
-│              ExchangeReportDTO, CreateExchangeBookRequest,
-│              ExchangeRatingRequest, ExchangeReportRequest
-├── service/   ExchangeBookService, ExchangeRequestService,
-│              ExchangeBorrowService, ExchangeReputationService,
-│              ExchangeReportService, ExchangeOverdueScheduler
-└── controller/ ExchangeBookController, ExchangeRequestController,
-                ExchangeBorrowController, ExchangeReportController,
-                ExchangeAdminController
+1. List book      → ExchangeBook{status=AVAILABLE}
+2. Send request   → ExchangeRequest{status=PENDING}
+                     ExchangeBook{status=REQUESTED}
+3. Accept         → lockDeposit(borrower, 500 coins)
+                     ExchangeDeposit{status=LOCKED}
+                     ExchangeBorrowRecord{status=ACTIVE}
+                     ExchangeBook{status=BORROWED}
+4. Return         → releaseDeposit(borrower, 500 coins)
+                     ExchangeDeposit{status=RELEASED}
+                     ExchangeBorrowRecord{status=RETURNED}
+                     ExchangeBook{status=AVAILABLE} ← auto-relisted
+5. Daily 02:30    → if dueDate < today:
+                       ExchangeDeposit{status=FORFEITED}
+                       applyPenalty(borrower, 2 pts)
+                       if penaltyPts >= 10: blocked=true
+6. Rate           → rolling avg: score = score*0.8 + rating*0.2
 ```
 
-### Deposit Flow
+### Deposit Logic
 
-```
-Owner accepts request:
-  ExchangeReputationService.lockDeposit(borrower, 500)
-  → if balance < 500: throw IllegalStateException
-  → decrement exchangeBalance by 500
-  → create ExchangeDeposit{status=LOCKED}
-  → create ExchangeBorrowRecord
+```java
+// Lock (on accept)
+public void lockDeposit(User user, long amount) {
+    UserReputation rep = getOrCreate(user);
+    if (rep.getExchangeBalance() < amount)
+        throw new IllegalStateException("Insufficient balance. Need "
+            + amount + " coins, have " + rep.getExchangeBalance());
+    rep.setExchangeBalance(rep.getExchangeBalance() - amount);
+    reputationRepository.save(rep);
+}
 
-Borrower returns on time:
-  ExchangeReputationService.releaseDeposit(borrower, 500)
-  → increment exchangeBalance by 500
-  → set ExchangeDeposit{status=RELEASED}
-
-Daily scheduler (02:30):
-  For each ACTIVE borrow where dueDate < today:
-    → set ExchangeDeposit{status=FORFEITED}
-    → applyPenalty(borrower, 2 points)
-    → if penaltyPoints >= 10: blockedFromExchange = true
+// Release (on return)
+public void releaseDeposit(User user, long amount) {
+    UserReputation rep = getOrCreate(user);
+    rep.setExchangeBalance(rep.getExchangeBalance() + amount);
+    reputationRepository.save(rep);
+}
 ```
 
 ---
 
-## 10. AI Assistant Integration
+## 🤖 AI Assistant Integration
 
-File: `src/utils/groq.js`
+```javascript
+// utils/groq.js — called on every user message
+async function getAIResponse(message, history) {
 
+  // Step 1: Parallel fetch live user data
+  const keywords = message.split(' ').filter(w => w.length > 3);
+  const [books, loans, fines, subscription] = await Promise.all([
+    api.get(`/api/books?search=${keywords.join('+')}&size=5`),
+    api.get('/api/book-loans/my?size=100'),
+    api.get('/api/fines/my?status=PENDING'),
+    api.get('/api/subscriptions/user/active').catch(() => ({ data: null })),
+  ]);
+
+  // Step 2: Build system prompt with live data
+  const systemPrompt = `You are a library assistant at Kitep Space.
+ACTIVE LOANS: ${loans.data.content.map(l =>
+  `"${l.book.title}" due ${l.dueDate} (${l.status})`).join(', ') || 'None'}
+FINES: ${fines.data.map(f =>
+  `${f.amount} coins (${f.status})`).join(', ') || 'None'}
+SUBSCRIPTION: ${subscription.data?.planName || 'None'}
+BOOKS FOUND: ${books.data.content?.map(b =>
+  `"${b.title}" by ${b.author} (${b.availableCopies > 0 ? 'Available' : 'Checked Out'})`
+).join(', ') || 'None'}
+Answer ONLY from the data above. Be concise and friendly.`;
+
+  // Step 3: Groq API call (OpenAI-compatible)
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...history,
+        { role: 'user', content: message },
+      ],
+    }),
+  });
+
+  return (await res.json()).choices[0].message.content;
+}
 ```
-User sends message
-→ Extract keywords (words > 3 chars)
-→ Promise.all([
-    GET /api/books?search={keywords},
-    GET /api/book-loans/my,
-    GET /api/fines/my?status=PENDING,
-    GET /api/subscriptions/user/active
-  ])
-→ buildSystemPrompt({ books, loans, fines, subscription })
-  (injects live data as structured text)
-→ POST https://api.groq.com/openai/v1/chat/completions
-  { model: "llama-3.3-70b-versatile", messages: [...history, userMsg] }
-→ Display response in chat widget
-```
-
-The system prompt explicitly constrains the model to answer **only from the provided data**, preventing hallucination.
 
 ---
 
-## 11. API Reference
+## 📡 API Reference
 
-### Public Endpoints (no auth)
+### Public (No Auth)
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/auth/signup` | Register new user |
-| POST | `/auth/login` | Login — returns JWT |
-| POST | `/auth/forgot-password` | Send reset email |
-| POST | `/auth/reset-password` | Reset password with token |
-| GET | `/api/books` | List/search books (paginated) |
-| GET | `/api/books/{id}` | Get single book |
-| GET | `/api/genres/active` | Get active genres |
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `POST` | `/auth/signup` | Register |
+| `POST` | `/auth/login` | Login → JWT |
+| `POST` | `/auth/forgot-password` | Send reset email |
+| `GET` | `/api/books` | Book catalog (paginated, searchable) |
+| `GET` | `/api/books/{id}` | Single book |
+| `GET` | `/api/genres/active` | Active genres |
 
-### Authenticated Endpoints
+### Authenticated
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/users/profile` | Get current user |
-| PUT | `/api/users/profile` | Update profile |
-| GET | `/api/users/{id}/public-profile` | Public profile + reputation |
-| GET | `/api/book-loans/my` | Get my loans |
-| POST | `/api/book-loans/checkout/{bookId}` | Borrow a book |
-| PUT | `/api/book-loans/{id}/return` | Return a book |
-| PUT | `/api/book-loans/{id}/renew` | Renew a loan |
-| GET | `/api/fines/my` | Get my fines |
-| GET | `/api/subscriptions/plans` | Get all plans |
-| GET | `/api/subscriptions/user/active` | Get active subscription |
-| POST | `/api/subscriptions/subscribe/{planId}` | Purchase subscription |
-| GET | `/api/reservations/my` | Get my reservations |
-| POST | `/api/reservations` | Reserve a book |
-| GET | `/api/exchange/books` | P2P marketplace |
-| GET | `/api/exchange/books/my` | My listed books |
-| GET | `/api/exchange/books/balance` | My coin balance |
-| POST | `/api/exchange/books` | List a book |
-| PATCH | `/api/exchange/books/{id}/toggle` | Toggle availability |
-| DELETE | `/api/exchange/books/{id}` | Remove listing |
-| POST | `/api/exchange/requests/{bookId}` | Send borrow request |
-| PUT | `/api/exchange/requests/{id}/accept` | Accept request |
-| PUT | `/api/exchange/requests/{id}/reject` | Reject request |
-| PUT | `/api/exchange/requests/{id}/cancel` | Cancel request |
-| GET | `/api/exchange/requests/my` | My sent requests |
-| GET | `/api/exchange/requests/incoming` | Incoming requests |
-| GET | `/api/exchange/borrows/my` | Books I borrowed |
-| GET | `/api/exchange/borrows/my-lends` | Books I lent |
-| PUT | `/api/exchange/borrows/{id}/return` | Return a book |
-| POST | `/api/exchange/borrows/{id}/rate-lender` | Rate the lender |
-| POST | `/api/exchange/borrows/{id}/rate-borrower` | Rate the borrower |
-| POST | `/api/friends/request/{id}` | Send friend request |
-| PUT | `/api/friends/accept/{id}` | Accept friend request |
-| GET | `/api/friends/my` | Get friends list |
-| GET | `/api/friends/search?q=` | Search users |
-| GET | `/api/messages/conversations` | Get conversations |
-| POST | `/api/messages/send/{receiverId}` | Send message |
-| GET | `/api/messages/conversation/{userId}` | Get messages with user |
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `GET` | `/api/users/profile` | Current user |
+| `PUT` | `/api/users/profile` | Update profile |
+| `GET` | `/api/users/{id}/public-profile` | Any user's public profile |
+| `GET` | `/api/book-loans/my` | My loans |
+| `POST` | `/api/book-loans/checkout/{bookId}` | Borrow |
+| `PUT` | `/api/book-loans/{id}/return` | Return |
+| `PUT` | `/api/book-loans/{id}/renew` | Renew |
+| `GET` | `/api/fines/my` | My fines |
+| `GET` | `/api/subscriptions/user/active` | Active subscription |
+| `POST` | `/api/subscriptions/subscribe/{planId}` | Subscribe |
+| `GET` | `/api/exchange/books` | Marketplace |
+| `GET` | `/api/exchange/books/balance` | My coin balance |
+| `POST` | `/api/exchange/books` | List a book |
+| `PATCH` | `/api/exchange/books/{id}/toggle` | Toggle availability |
+| `POST` | `/api/exchange/requests/{bookId}` | Send request |
+| `PUT` | `/api/exchange/requests/{id}/accept` | Accept (locks deposit) |
+| `PUT` | `/api/exchange/requests/{id}/reject` | Reject |
+| `PUT` | `/api/exchange/borrows/{id}/return` | Return (releases deposit) |
+| `POST` | `/api/exchange/borrows/{id}/rate-lender` | Rate lender |
+| `POST` | `/api/exchange/borrows/{id}/rate-borrower` | Rate borrower |
+| `POST` | `/api/friends/request/{id}` | Add friend |
+| `GET` | `/api/friends/my` | Friends list |
+| `GET` | `/api/messages/conversations` | All conversations |
+| `POST` | `/api/messages/send/{receiverId}` | Send message |
 
-### Admin Endpoints (`/api/super-admin/**`)
+### Admin Only (`/api/super-admin/**`)
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/super-admin/exchange/reports` | All exchange reports |
-| PUT | `/api/super-admin/exchange/reports/{id}/resolve` | Resolve a report |
-| GET | `/api/super-admin/exchange/reputations` | All user reputations |
-| PUT | `/api/super-admin/exchange/users/{id}/block` | Block user from exchange |
-| PUT | `/api/super-admin/exchange/users/{id}/unblock` | Unblock user |
-| PUT | `/api/super-admin/exchange/users/{id}/grant-balance` | Grant coins to user |
-| GET | `/api/super-admin/exchange/borrows` | All exchange borrows |
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `GET` | `/api/super-admin/exchange/reports` | All reports |
+| `PUT` | `/api/super-admin/exchange/reports/{id}/resolve` | Resolve report |
+| `GET` | `/api/super-admin/exchange/reputations` | User reputations |
+| `PUT` | `/api/super-admin/exchange/users/{id}/block` | Block from exchange |
+| `PUT` | `/api/super-admin/exchange/users/{id}/unblock` | Unblock |
+| `PUT` | `/api/super-admin/exchange/users/{id}/grant-balance` | Grant coins |
 
 ---
 
-## 12. Deployment
+## ☁️ Deployment Guide
 
-### Frontend (Netlify)
+### Netlify (Frontend)
 
-```yaml
-Build command: npm run build
-Publish directory: dist
+```
+Build command:  npm run build
+Publish dir:    dist
+Node version:   20
 ```
 
-**Environment variables (Netlify dashboard):**
+Environment variables in Netlify dashboard:
 ```
-VITE_API_BASE_URL=https://librarymanagementsystem-production-fc6e.up.railway.app
-VITE_GROQ_API_KEY=your_groq_key
-```
-
-**Custom domain:** Configure `kitep.space` in Netlify → Domain management → Add custom domain.
-
-`public/_redirects`:
-```
-/* /index.html 200
+VITE_API_BASE_URL = https://librarymanagementsystem-production-fc6e.up.railway.app
+VITE_GROQ_API_KEY = gsk_xxxxxxxx
 ```
 
-### Backend (Railway)
+Custom domain: Netlify → Domain management → Add `kitep.space`
 
-1. Connect GitHub repo → Railway auto-detects Maven → builds with Nixpacks
-2. Add MySQL service in same project
-3. Set environment variables using Railway variable references:
-   ```
-   DB_HOST=${{MySQL.RAILWAY_TCP_PROXY_DOMAIN}}
-   DB_PORT=${{MySQL.RAILWAY_TCP_PROXY_PORT}}
-   DB_NAME=${{MySQL.MYSQL_DATABASE}}
-   DB_USERNAME=${{MySQL.MYSQLUSER}}
-   DB_PASSWORD=${{MySQL.MYSQL_ROOT_PASSWORD}}
-   FRONTEND_URL=https://kitep.space
-   BASE_URL=https://librarymanagementsystem-production-fc6e.up.railway.app
-   ```
+### Railway (Backend)
 
-> **Important:** Use the TCP proxy domain/port, NOT the internal `mysql.railway.internal` hostname — the internal hostname only resolves within Railway's private network.
+```
+DB_HOST     = ${{MySQL.RAILWAY_TCP_PROXY_DOMAIN}}
+DB_PORT     = ${{MySQL.RAILWAY_TCP_PROXY_PORT}}
+DB_NAME     = ${{MySQL.MYSQL_DATABASE}}
+DB_USERNAME = ${{MySQL.MYSQLUSER}}
+DB_PASSWORD = ${{MySQL.MYSQL_ROOT_PASSWORD}}
+FRONTEND_URL = https://kitep.space
+BASE_URL     = https://librarymanagementsystem-production-fc6e.up.railway.app
+```
 
-### After Deployment
+> ⚠️ Use `RAILWAY_TCP_PROXY_DOMAIN` — NOT `mysql.railway.internal`. The internal hostname only resolves within Railway's private network and causes startup failures from outside.
 
-Hibernate `ddl-auto=update` creates/updates all tables on startup automatically. For schema changes that Hibernate cannot handle automatically (e.g., column type changes), run the ALTER TABLE manually:
+### Manual DB Migrations
+
+Hibernate `ddl-auto=update` handles most schema changes. For column type changes:
 
 ```sql
--- Example: widening a column
+-- Widen cover_image_url (was VARCHAR 500, needs TEXT for base64)
 ALTER TABLE exchange_books MODIFY COLUMN cover_image_url LONGTEXT;
+
+-- Verify exchange tables were created correctly
+SHOW COLUMNS FROM exchange_books;
+SHOW COLUMNS FROM exchange_deposits;
+SHOW COLUMNS FROM user_reputations;
 ```
+
+---
+
+<div align="center">
+
+**Kitep Space** · Ala-Too International University · Bishkek, Kyrgyz Republic · 2026
+Author: **Kylychbek Parpiev** · Supervisor: **Talgat Mendekov**
+
+</div>
