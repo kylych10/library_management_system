@@ -1,7 +1,20 @@
 # Kitep Space — Library Management System
 
-> **Live:** [https://kitep.space](https://kitep.space)  
-> **Backend API:** [https://librarymanagementsystem-production-fc6e.up.railway.app](https://librarymanagementsystem-production-fc6e.up.railway.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-kitep.space-4F46E5?style=for-the-badge&logo=netlify&logoColor=white)](https://kitep.space)
+[![Backend](https://img.shields.io/badge/Backend-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://librarymanagementsystem-production-fc6e.up.railway.app)
+
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![Redux](https://img.shields.io/badge/Redux%20Toolkit-2.x-764ABC?style=flat-square&logo=redux&logoColor=white)
+![MUI](https://img.shields.io/badge/Material%20UI-6.x-007FFF?style=flat-square&logo=mui&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Google OAuth2](https://img.shields.io/badge/Google-OAuth2-4285F4?style=flat-square&logo=google&logoColor=white)
+![Netlify](https://img.shields.io/badge/Netlify-Deploy-00C7B7?style=flat-square&logo=netlify&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-Deploy-0B0D0E?style=flat-square&logo=railway&logoColor=white)
+![Groq AI](https://img.shields.io/badge/Groq-LLaMA%203.3-F55036?style=flat-square&logo=meta&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?style=flat-square&logo=vite&logoColor=white)
 
 Kitep Space is a full-stack, production-deployed Library Management System with an integrated administrative dashboard, P2P book exchange, AI assistant, and social features — built as a diploma thesis at Ala-Too International University, Bishkek, 2026.
 
